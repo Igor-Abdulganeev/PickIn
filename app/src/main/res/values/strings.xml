@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">InstaImageCopy</string>
+    <string name="button_text_waiting">Загрузить</string>
+    <string name="button_text_download">Загрузка страницы</string>
+    <string name="button_text_separate">Обработка страницы</string>
 </resources>

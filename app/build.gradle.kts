@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.core)
 
+    implementation(libs.kotlinx.collections.immutable)
+
     testImplementation(libs.junit)
 //    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

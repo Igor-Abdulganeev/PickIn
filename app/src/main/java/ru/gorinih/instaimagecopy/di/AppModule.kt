@@ -2,7 +2,7 @@ package ru.gorinih.instaimagecopy.di
 
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import ru.gorinih.instaimagecopy.MainViewModel
+import ru.gorinih.instaimagecopy.ImageCopyViewModel
 
 /**
  * Created by Igor Abdulganeev on 20.10.2026
@@ -10,5 +10,5 @@ import ru.gorinih.instaimagecopy.MainViewModel
 
 val appModule = module {
 
-    viewModel<MainViewModel> { MainViewModel(webLoader = get()) }
+    viewModel<ImageCopyViewModel> { ImageCopyViewModel(webLoader = get()) }
 }

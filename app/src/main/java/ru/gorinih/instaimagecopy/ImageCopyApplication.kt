@@ -9,7 +9,7 @@ import ru.gorinih.instaimagecopy.di.networkModule
  * Created by Igor Abdulganeev on 20.10.2026
  */
 
-class MainApplication: Application() {
+class ImageCopyApplication: Application() {
     override fun onCreate() {
         super.onCreate()
 

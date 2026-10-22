@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:name=".MainApplication"
+        android:name=".ImageCopyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.InstaImageCopy">
         <activity
-            android:name=".MainActivity"
+            android:name=".ImageCopyActivity"
             android:exported="true"
             android:theme="@style/Theme.InstaImageCopy"
             android:windowSoftInputMode="adjustResize">

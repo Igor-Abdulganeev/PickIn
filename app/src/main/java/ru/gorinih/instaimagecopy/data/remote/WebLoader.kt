@@ -1,9 +1,11 @@
 package ru.gorinih.instaimagecopy.data.remote
 
+import android.annotation.SuppressLint
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.CancellationException
@@ -16,6 +18,7 @@ class WebLoader(
     private val httpClient: HttpClient
 ) {
 
+    @SuppressLint("SuspiciousIndentation")
     suspend fun loadPage(url: String): NetworkResult<String> = try {
         val response = httpClient.get(url)
         println("RESPONSE STATUS = ${response.status.isSuccess()}")
