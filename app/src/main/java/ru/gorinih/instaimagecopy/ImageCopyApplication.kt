@@ -1,6 +1,7 @@
 package ru.gorinih.instaimagecopy
 
 import android.app.Application
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import ru.gorinih.instaimagecopy.di.appModule
 import ru.gorinih.instaimagecopy.di.networkModule
@@ -14,6 +15,7 @@ class ImageCopyApplication: Application() {
         super.onCreate()
 
         startKoin {
+            androidContext(this@ImageCopyApplication)
             modules(
                 appModule,
                 networkModule

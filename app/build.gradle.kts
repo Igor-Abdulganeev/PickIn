@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
@@ -11,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "ru.gorinih.instaimagecopy"
-        minSdk = 28
+        minSdk = 33
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -58,6 +59,7 @@ dependencies {
     implementation(libs.ktor.client.core)
 
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.androidx.webkit)
 
     testImplementation(libs.junit)
 //    androidTestImplementation(libs.androidx.compose.ui.test.junit4)

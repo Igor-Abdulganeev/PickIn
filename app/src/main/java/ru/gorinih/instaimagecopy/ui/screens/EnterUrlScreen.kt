@@ -24,6 +24,7 @@ fun EnterUrlScreen(
     onDownloadUrl: () -> Unit,
 ) {
     val currentJob = job()
+    //val insta = koinInject<InstaParser>()
     Column(modifier = modifier) {
         TextField(
             value = url(),
@@ -33,16 +34,18 @@ fun EnterUrlScreen(
         )
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = onDownloadUrl,
+            onClick = { onDownloadUrl() },
             enabled = currentJob == StatusJob.WAITING
         ) {
-            Text(text = stringResource(
-                when(currentJob) {
-                    StatusJob.WAITING -> R.string.button_text_waiting
-                    StatusJob.DOWNLOAD -> R.string.button_text_download
-                    StatusJob.SEPARATE -> R.string.button_text_separate
-                }
-            ))
+            Text(
+                text = stringResource(
+                    when (currentJob) {
+                        StatusJob.WAITING -> R.string.button_text_waiting
+                        StatusJob.DOWNLOAD -> R.string.button_text_download
+                        StatusJob.SEPARATE -> R.string.button_text_separate
+                    }
+                )
+            )
         }
     }
 }

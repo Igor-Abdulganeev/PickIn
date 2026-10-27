@@ -27,6 +27,7 @@ class ImageCopyActivity : ComponentActivity() {
                 val imageCopyState = viewModel.imageCopyState
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
+
                         Button(
                             onClick = {
                                 viewModel.rotateVisibilitySettings()
@@ -37,7 +38,7 @@ class ImageCopyActivity : ComponentActivity() {
                                 url = { imageCopyState.url },
                                 job = { imageCopyState.job },
                                 onChangeUrl = { newUrl -> viewModel.onChangeUrl(newUrl = newUrl) },
-                                onDownloadUrl = { viewModel.getWebData() }
+                                onDownloadUrl = { viewModel.getWebData() },
                             )
                         if (imageCopyState.blocks[ScreenBlocks.SETTINGS] == true)
                             SettingsScreen()
