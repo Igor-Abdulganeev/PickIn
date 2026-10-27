@@ -1,15 +1,18 @@
 package ru.gorinih.instaimagecopy.data.parsers
 
+import android.util.Log
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import ru.gorinih.instaimagecopy.data.parsers.models.CarouselItem
+import ru.gorinih.instaimagecopy.data.parsers.models.CarouselSearchResult
 
 /**
  * Created by Igor Abdulganeev on 23.10.2026
@@ -30,8 +33,8 @@ class InstagramHtmlParser {
     fun parsePost(
         url: String,
         html: String
-    ): JsonObject? {
-        val shortcode = extractShortcode(url) ?: return null
+    ): CarouselSearchResult {
+        val shortcode = extractShortcode(url) ?: return CarouselSearchResult.NotFound
         return findPostJson(
             html = html,
             shortcode = shortcode
@@ -50,7 +53,7 @@ class InstagramHtmlParser {
     private fun findPostJson(
         html: String,
         shortcode: String
-    ): JsonObject? {
+    ): CarouselSearchResult {
         for (match in scriptRegex.findAll(html)) {
             val scriptContent = match.groupValues[1]
 
@@ -61,7 +64,7 @@ class InstagramHtmlParser {
             }
 
             // залогиненый формат Instagram, т.к. пока без логина то скроем
-            /*
+/*
             val postInfo = findProperty(
                 element = root,
                 propertyName = "xdt_api__v1__media__shortcode__web_info"
@@ -79,9 +82,9 @@ class InstagramHtmlParser {
             }?.jsonObjectOrNull()
                 ?: items?.singleOrNull()?.jsonObjectOrNull()
 
-            if (loginPost != null) { return loginPost }
+            if (loginPost != null) { return CarouselSearchResult.Found(loginPost) }
 
-             */
+ */
 
             // без логина формат: ищем объект, содержащий carousel_media.
             val unLoginPost = findObjectWithCarousel(
@@ -89,10 +92,12 @@ class InstagramHtmlParser {
                 shortcode = shortcode
             )
 
-            if (unLoginPost != null) { return unLoginPost }
+            if (unLoginPost !is CarouselSearchResult.NotFound) {
+                return unLoginPost
+            }
         }
 
-        return null
+        return CarouselSearchResult.NotFound
     }
 
     private fun extractShortcode(url: String): String? {
@@ -129,10 +134,10 @@ class InstagramHtmlParser {
             null
         }
 
-    private fun findObjectWithCarousel(
+     private fun findObjectWithCarousel(
         element: JsonElement,
         shortcode: String
-    ): JsonObject? {
+    ): CarouselSearchResult {
         when (element) {
             is JsonObject -> {
                 val code = element["code"]
@@ -142,26 +147,45 @@ class InstagramHtmlParser {
                 val carousel = element["carousel_media"] as? JsonArray
 
                 if (carousel != null && code == shortcode) {
-                    return element
+                    return CarouselSearchResult.Found(element)
+                }
+
+                val gatingRuling = element["gating_ruling"]
+                    ?.takeUnless { it is JsonNull }
+
+                val mediaData = element["if_not_gated_logged_out"]
+
+                if (
+                    code == shortcode &&
+                    gatingRuling != null &&
+                    mediaData is JsonNull
+                ) {
+                    return CarouselSearchResult.AgeRestricted
                 }
 
                 for (value in element.values) {
                     val result = findObjectWithCarousel(value, shortcode)
-                    if (result != null) return result
+
+                    if (result !is CarouselSearchResult.NotFound) {
+                        return result
+                    }
                 }
             }
 
             is JsonArray -> {
                 for (value in element) {
                     val result = findObjectWithCarousel(value, shortcode)
-                    if (result != null) return result
+
+                    if (result !is CarouselSearchResult.NotFound) {
+                        return result
+                    }
                 }
             }
 
             else -> Unit
         }
 
-        return null
+        return CarouselSearchResult.NotFound
     }
 
     private fun extractAuthor(post: JsonObject): String? {

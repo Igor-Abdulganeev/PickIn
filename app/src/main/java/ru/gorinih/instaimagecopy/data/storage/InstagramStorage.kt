@@ -65,7 +65,7 @@ class InstagramStorage(
             url.substringAfterLast("/").substringBefore("?") + "_" + System.currentTimeMillis()
         val mimeType = getMimeType(url)
         val contentValue = ContentValues().apply {
-            put(MediaStore.Downloads.RELATIVE_PATH, "Download/$authorName/")
+            put(MediaStore.Downloads.RELATIVE_PATH, "Download/InstaSave/$authorName/")
             put(MediaStore.Downloads.DISPLAY_NAME, fileName)
             put(MediaStore.Downloads.MIME_TYPE, mimeType)
             put(MediaStore.Downloads.IS_PENDING, 1)

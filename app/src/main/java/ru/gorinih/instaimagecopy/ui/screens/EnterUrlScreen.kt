@@ -20,6 +20,7 @@ fun EnterUrlScreen(
     modifier: Modifier = Modifier,
     url: () -> String,
     job: () -> StatusJob,
+    result: () -> String,
     onChangeUrl: (String) -> Unit,
     onDownloadUrl: () -> Unit,
 ) {
@@ -47,5 +48,6 @@ fun EnterUrlScreen(
                 )
             )
         }
+        Text(text = result())
     }
 }
