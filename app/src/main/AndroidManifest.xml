@@ -18,7 +18,7 @@
             android:name=".ImageCopyActivity"
             android:exported="true"
             android:theme="@style/Theme.InstaImageCopy"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

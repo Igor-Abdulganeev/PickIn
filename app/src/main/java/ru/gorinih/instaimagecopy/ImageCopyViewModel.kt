@@ -44,7 +44,7 @@ class ImageCopyViewModel(
     }
 
     fun onChangeUrl(newUrl: String) {
-        imageCopyState = imageCopyState.copy(url = newUrl, result = "")
+        imageCopyState = imageCopyState.copy(url = newUrl)
     }
 
     fun rotateVisibilitySettings() {

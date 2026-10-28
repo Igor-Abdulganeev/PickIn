@@ -1,6 +1,5 @@
 package ru.gorinih.instaimagecopy.data.parsers
 
-import android.util.Log
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -145,8 +144,18 @@ class InstagramHtmlParser {
                     ?.contentOrNull
 
                 val carousel = element["carousel_media"] as? JsonArray
+                val hasImageVersions = element["image_versions2"] is JsonObject
+                val hasVideoVersions = element["video_versions"] is JsonArray
+                val hasDisplayUri = element["display_uri"]
+                    ?.jsonPrimitive
+                    ?.contentOrNull
+                    ?.isNotBlank() == true
+                val mediaType = element["media_type"]
+                    ?.jsonPrimitive
+                    ?.intOrNull
 
-                if (carousel != null && code == shortcode) {
+                if ( code == shortcode &&
+                        (carousel != null || hasImageVersions || hasVideoVersions || hasDisplayUri || mediaType == 1 || mediaType == 2 || mediaType == 8)) {
                     return CarouselSearchResult.Found(element)
                 }
 
@@ -203,11 +212,8 @@ class InstagramHtmlParser {
 
     private fun extractCarouselMedia(
         post: JsonObject
-    ): List<JsonObject> {
-        return (post["carousel_media"] as? JsonArray)
-            ?.filterIsInstance<JsonObject>()
-            .orEmpty()
-    }
+    ): List<JsonObject> =
+        (post["carousel_media"] as? JsonArray)?.filterIsInstance<JsonObject>() ?: listOf(post)
 
     private fun extractImageUrl(
         media: JsonObject
@@ -228,6 +234,24 @@ class InstagramHtmlParser {
         }
 
         return media["display_uri"]
+            ?.jsonPrimitive
+            ?.contentOrNull
+    }
+
+    private fun extractVideoUrl(media: JsonObject): String? {
+        val versions = media["video_versions"] as? JsonArray
+            ?: return null
+        return versions
+            .mapNotNull { it.jsonObjectOrNull() }
+            .maxByOrNull { version ->
+                val width = version["width"]
+                    ?.jsonPrimitive?.intOrNull ?: 0
+                val height = version["height"]
+                    ?.jsonPrimitive?.intOrNull ?: 0
+
+                width * height
+            }
+            ?.get("url")
             ?.jsonPrimitive
             ?.contentOrNull
     }
@@ -257,30 +281,16 @@ class InstagramHtmlParser {
             ?.jsonPrimitive
             ?.contentOrNull
 
-    private fun extractVideoUrl(media: JsonObject): String? {
-        val versions = media["video_versions"] as? JsonArray
-            ?: return null
-        return versions
-            .mapNotNull { it.jsonObjectOrNull() }
-            .maxByOrNull { version ->
-                val width = version["width"]
-                    ?.jsonPrimitive?.intOrNull ?: 0
-                val height = version["height"]
-                    ?.jsonPrimitive?.intOrNull ?: 0
-
-                width * height
-            }
-            ?.get("url")
-            ?.jsonPrimitive
-            ?.contentOrNull
-    }
-
     private fun isVideo(media: JsonObject): Boolean {
         val typeName = media["__typename"]
             ?.jsonPrimitive
             ?.contentOrNull
-        return typeName?.contains("Video", ignoreCase = true) == true ||
-                media["video_versions"] is JsonArray
+        if (typeName?.contains("Video", ignoreCase = true) == true) return true
+
+        val mediaType = media["media_type"]
+            ?.jsonPrimitive
+            ?.intOrNull
+        return mediaType == 2 || media["video_versions"] is JsonArray
     }
 
     private fun parseCarouselItem(media: JsonObject, author: String?): CarouselItem {
