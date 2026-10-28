@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import org.koin.compose.viewmodel.koinViewModel
 import ru.gorinih.instaimagecopy.ui.models.ScreenBlocks
 import ru.gorinih.instaimagecopy.ui.screens.EnterUrlScreen
+import ru.gorinih.instaimagecopy.ui.screens.InstagramScreen
 import ru.gorinih.instaimagecopy.ui.screens.SettingsScreen
 import ru.gorinih.instaimagecopy.ui.theme.InstaImageCopyTheme
 
@@ -41,7 +42,12 @@ class ImageCopyActivity : ComponentActivity() {
                 }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
-
+                        InstagramScreen(
+                            saveHtml = {html ->
+                                viewModel.sHtml(html)
+                            }
+                        )
+/*
                         Button(
                             onClick = {
                                 viewModel.rotateVisibilitySettings()
@@ -56,7 +62,13 @@ class ImageCopyActivity : ComponentActivity() {
                                 onDownloadUrl = { viewModel.getWebData() },
                             )
                         if (imageCopyState.blocks[ScreenBlocks.SETTINGS] == true)
-                            SettingsScreen()
+                            SettingsScreen(
+                                selectedDownloadType = { 0 },
+                                selectedMediaType = { 0 },
+                                onClickDownloadType = {},
+                                onClickMediaType = {}
+                            )
+                        */
                     }
                 }
             }

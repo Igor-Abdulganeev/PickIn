@@ -29,7 +29,7 @@ class InstagramStorage(
 ) {
 
     fun saveHtmlToFile(html: String): File {
-        val file = File(context.filesDir, "instagram_response.html")
+        val file = File(context.filesDir, "instagram_response_${System.currentTimeMillis()}.html")
         file.writeText(html, Charsets.UTF_8)
         return file
     }

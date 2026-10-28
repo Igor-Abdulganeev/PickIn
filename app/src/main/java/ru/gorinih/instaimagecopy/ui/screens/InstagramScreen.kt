@@ -1,5 +1,6 @@
 package ru.gorinih.instaimagecopy.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,13 +23,14 @@ import ru.gorinih.instaimagecopy.data.remote.InstagramWebView
  */
 @Composable
 fun InstagramScreen(
+    saveHtml: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val testUrl =
         "https://phet-dev.colorado.edu/html/build-an-atom/0.0.0-3/simple-text-only-test-page.html"
     val instagramUrl = "https://www.instagram.com/"
     val postUrl =
-        "https://www.instagram.com/p/DesFNjnDQgL/?img_index=1"
+        "https://www.instagram.com/reel/DdhWavwo0oF/"
 
     var url by remember { mutableStateOf(testUrl) }
     var pageStatus by remember { mutableStateOf("Готово") }
@@ -83,6 +85,7 @@ fun InstagramScreen(
             onHtmlLoaded = { html ->
                 pageStatus = "Получен HTML: ${html.length} символов"
             },
+            saveHtmlToFile = saveHtml,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)

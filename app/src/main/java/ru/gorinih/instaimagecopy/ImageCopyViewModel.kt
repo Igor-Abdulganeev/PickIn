@@ -15,8 +15,10 @@ import ru.gorinih.instaimagecopy.data.parsers.models.CarouselSearchResult
 import ru.gorinih.instaimagecopy.data.remote.models.NetworkResult
 import ru.gorinih.instaimagecopy.data.remote.WebLoader
 import ru.gorinih.instaimagecopy.data.storage.InstagramStorage
+import ru.gorinih.instaimagecopy.ui.models.MediaDownload
 import ru.gorinih.instaimagecopy.ui.models.ScreenBlocks
 import ru.gorinih.instaimagecopy.ui.models.StatusJob
+import ru.gorinih.instaimagecopy.ui.models.TypeDownload
 import ru.gorinih.instaimagecopy.ui.models.UiState
 import ru.gorinih.instaimagecopy.ui.models.toMediaItem
 
@@ -41,6 +43,18 @@ class ImageCopyViewModel(
             is CancellationException -> throw throwable
             else -> println("Глобальная корутина $throwable")
         }
+    }
+    fun sHtml(html: String) {
+        val file = storage.saveHtmlToFile(html)
+        Log.d("InstagramWeb", "HTML saved: ${file.absolutePath}")
+        Log.d("InstagramWeb", "HTML size: ${file.length()} bytes")
+    }
+
+    init {
+        imageCopyState = imageCopyState.copy(
+            selectedTypeDownload = TypeDownload.MANUAL,
+            selectedMediaDownload = MediaDownload.ALL
+        )
     }
 
     fun onChangeUrl(newUrl: String) {
@@ -112,12 +126,11 @@ class ImageCopyViewModel(
                                                     "media=${item.mediaUrl}"
                                         )
                                     }
-
                                     println("Скачиваем файлы")
                                     imageCopyState = imageCopyState.copy(job = StatusJob.SEPARATE)
                                     val downloaded = storage.downloadsFiles(listOfMedia, items.first().author)
                                     Log.d("Instagram", "Результат скачивания файлов ${downloaded.size}")
-                                imageCopyState = imageCopyState.copy(result = "Скачано файлов ${downloaded.count { it.errorMessage.isEmpty() }}")
+                                imageCopyState = imageCopyState.copy(result = "Скачано файлов ${downloaded.count { it.errorMessage.isEmpty() }}", url = "")
                                     downloaded.forEach { item ->
                                         Log.i("Instagram", "Файл ${item.file}")
                                         Log.i("Instagram", "    uri: ${item.uri}")

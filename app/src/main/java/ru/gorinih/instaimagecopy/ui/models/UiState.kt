@@ -14,18 +14,7 @@ data class UiState (
     val blocks: PersistentMap<ScreenBlocks, Boolean> = mapOf<ScreenBlocks, Boolean>(
         ScreenBlocks.INPUT to true,
         ScreenBlocks.SETTINGS to true
-    ).toPersistentMap()
+    ).toPersistentMap(),
+    val selectedTypeDownload: TypeDownload = TypeDownload.NONE,
+    val selectedMediaDownload: MediaDownload = MediaDownload.NONE,
 )
-
-enum class StatusJob{
-    WAITING,
-    DOWNLOAD,
-    SEPARATE,
-}
-
-enum class ScreenBlocks {
-    INPUT,
-    SETTINGS,
-}
-
-
