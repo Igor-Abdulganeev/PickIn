@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import org.koin.compose.viewmodel.koinViewModel
 import ru.gorinih.instaimagecopy.ui.models.ScreenBlocks
 import ru.gorinih.instaimagecopy.ui.screens.EnterUrlScreen
-import ru.gorinih.instaimagecopy.ui.screens.InstagramScreen
 import ru.gorinih.instaimagecopy.ui.screens.SettingsScreen
 import ru.gorinih.instaimagecopy.ui.theme.InstaImageCopyTheme
 
@@ -36,7 +35,7 @@ class ImageCopyActivity : ComponentActivity() {
 
                 LaunchedEffect(incomingIntentUriState.value) {
                         incomingIntentUriState.value?.let {
-                            viewModel.onChangeUrl(it)
+                            viewModel.onChangeUrl(it, true)
                             incomingIntentUriState.value = null
                         }
                 }
@@ -61,14 +60,14 @@ class ImageCopyActivity : ComponentActivity() {
                                 job = { imageCopyState.job },
                                 result = { imageCopyState.result },
                                 onChangeUrl = { newUrl -> viewModel.onChangeUrl(newUrl = newUrl) },
-                                onDownloadUrl = { viewModel.getWebData() },
+                                onDownloadUrl = { viewModel.getPostData() },
                             )
                         if (imageCopyState.blocks[ScreenBlocks.SETTINGS] == true)
                             SettingsScreen(
-                                selectedDownloadType = { 0 },
-                                selectedMediaType = { 0 },
-                                onClickDownloadType = {},
-                                onClickMediaType = {}
+                                selectedDownloadType = { imageCopyState.selectedTypeDownload },
+                                selectedMediaType = { imageCopyState.selectedMediaDownload },
+                                onClickDownloadType = { viewModel.onChangeTypeDownload(it)},
+                                onClickMediaType = { viewModel.onChangeMediaDownload(it)}
                             )
                     }
                 }

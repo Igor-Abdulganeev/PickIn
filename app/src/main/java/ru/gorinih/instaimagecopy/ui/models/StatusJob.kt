@@ -5,7 +5,8 @@ package ru.gorinih.instaimagecopy.ui.models
  */
 
 enum class StatusJob{
-    WAITING,
-    DOWNLOAD,
-    SEPARATE,
+    WAITING_JOB, //приложение готово для разбора поста и загрузки данных
+    DOWNLOAD_POST, //загрузка поста
+    DOWNLOAD_MEDIA, //загрузка данных
+    RESEARCH, //поиск данных
 }

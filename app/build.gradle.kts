@@ -60,6 +60,8 @@ dependencies {
 
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.datastore)
 
     testImplementation(libs.junit)
 //    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
