@@ -42,12 +42,14 @@ class ImageCopyActivity : ComponentActivity() {
                 }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
+/*
                         InstagramScreen(
                             saveHtml = {html ->
                                 viewModel.sHtml(html)
                             }
                         )
-/*
+*/
+
                         Button(
                             onClick = {
                                 viewModel.rotateVisibilitySettings()
@@ -68,7 +70,6 @@ class ImageCopyActivity : ComponentActivity() {
                                 onClickDownloadType = {},
                                 onClickMediaType = {}
                             )
-                        */
                     }
                 }
             }

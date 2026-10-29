@@ -197,17 +197,18 @@ class InstagramHtmlParser {
         return CarouselSearchResult.NotFound
     }
 
-    private fun extractAuthor(post: JsonObject): String? {
-        val user = post["user"] as? JsonObject ?: return null
+    private fun extractAuthor(post: JsonObject): Pair<String?, String?> {
+        val user = post["user"] as? JsonObject ?: return Pair(null, null)
 
-        return user["username"]
+        return Pair(user["full_name"]
             ?.jsonPrimitive
             ?.contentOrNull
-            ?.takeIf { it.isNotBlank() }
-            ?: user["full_name"]
+            ?.takeIf { it.isNotBlank() },
+            user["username"]
                 ?.jsonPrimitive
                 ?.contentOrNull
                 ?.takeIf { it.isNotBlank() }
+        )
     }
 
     private fun extractCarouselMedia(
@@ -293,7 +294,7 @@ class InstagramHtmlParser {
         return mediaType == 2 || media["video_versions"] is JsonArray
     }
 
-    private fun parseCarouselItem(media: JsonObject, author: String?): CarouselItem {
+    private fun parseCarouselItem(media: JsonObject, owner: Pair<String?, String?>): CarouselItem {
         val isVideo = isVideo(media)
         return CarouselItem(
             isVideo = isVideo,
@@ -305,7 +306,8 @@ class InstagramHtmlParser {
             },
             width = media["original_width"]?.jsonPrimitive?.intOrNull,
             height = media["original_height"]?.jsonPrimitive?.intOrNull,
-            author = author
+            author = owner.first,
+            nickName = owner.second
         )
     }
 }

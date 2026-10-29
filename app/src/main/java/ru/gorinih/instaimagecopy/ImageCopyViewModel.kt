@@ -128,7 +128,11 @@ class ImageCopyViewModel(
                                     }
                                     println("Скачиваем файлы")
                                     imageCopyState = imageCopyState.copy(job = StatusJob.SEPARATE)
-                                    val downloaded = storage.downloadsFiles(listOfMedia, items.first().author)
+                                    val downloaded = storage.downloadsFiles(
+                                        listOfMedia,
+                                        items.first().author,
+                                        items.first().nickName,
+                                    )
                                     Log.d("Instagram", "Результат скачивания файлов ${downloaded.size}")
                                 imageCopyState = imageCopyState.copy(result = "Скачано файлов ${downloaded.count { it.errorMessage.isEmpty() }}", url = "")
                                     downloaded.forEach { item ->

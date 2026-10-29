@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import ru.gorinih.instaimagecopy.data.storage.models.DownloadResult
-import ru.gorinih.instaimagecopy.data.storage.models.FilesResult
+import ru.gorinih.instaimagecopy.data.storage.models.MediaResult
 import java.io.File
 import java.io.OutputStream
 
@@ -34,19 +34,19 @@ class InstagramStorage(
         return file
     }
 
-    suspend fun downloadsFiles(urls: List<String>, authorName: String): List<FilesResult> = withContext(Dispatchers.IO) {
-        val resultList = mutableListOf<FilesResult>()
+    suspend fun downloadsFiles(urls: List<String>, authorName: String, authorNick: String): List<MediaResult> = withContext(Dispatchers.IO) {
+        val resultList = mutableListOf<MediaResult>()
         for (url in urls) {
             ensureActive()
-            when(val result = downloadFile(url, authorName)) {
+            when(val result = downloadFile(url, authorName, authorNick)) {
                 is DownloadResult.DownloadCancel -> return@withContext emptyList()
-                is DownloadResult.DownloadError -> {resultList.add(FilesResult(
+                is DownloadResult.DownloadError -> {resultList.add(MediaResult(
                     file = url,
                     uri = null,
                     errorMessage = result.errorMessage ?: ""
                 ))}
                 is DownloadResult.DownloadSuccess -> {
-                    resultList.add(FilesResult(
+                    resultList.add(MediaResult(
                         file = url,
                         uri = result.fileUri
                     ))
@@ -56,7 +56,7 @@ class InstagramStorage(
         return@withContext resultList
     }
 
-    private suspend fun downloadFile(url: String, authorName: String): DownloadResult {
+    private suspend fun downloadFile(url: String, authorName: String, authorNick: String): DownloadResult {
         if (url.isEmpty()) return DownloadResult.DownloadError(errorMessage = "Files path is empty.")
         val contentResolver = context.contentResolver ?: return DownloadResult.DownloadError(
             errorMessage = "Can`t get content resolver."
@@ -64,8 +64,14 @@ class InstagramStorage(
         val fileName =
             url.substringAfterLast("/").substringBefore("?") + "_" + System.currentTimeMillis()
         val mimeType = getMimeType(url)
+        val dir = when {
+            authorNick.isNotEmpty() && authorName.isNotEmpty() -> "$authorNick ($authorName)"
+            authorNick.isNotEmpty() -> authorNick
+            authorName.isNotEmpty() -> authorName
+            else -> "Default"
+        }
         val contentValue = ContentValues().apply {
-            put(MediaStore.Downloads.RELATIVE_PATH, "Download/InstaSave/$authorName/")
+            put(MediaStore.Downloads.RELATIVE_PATH, "Download/InstaSave/$dir/")
             put(MediaStore.Downloads.DISPLAY_NAME, fileName)
             put(MediaStore.Downloads.MIME_TYPE, mimeType)
             put(MediaStore.Downloads.IS_PENDING, 1)

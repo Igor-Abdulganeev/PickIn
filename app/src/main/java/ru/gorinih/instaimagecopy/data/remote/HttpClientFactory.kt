@@ -6,6 +6,7 @@ import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
@@ -19,6 +20,10 @@ import kotlinx.serialization.json.Json
  */
 
 object HttpClientFactory {
+    private const val DESKTOP_UA =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                "Chrome/131.0.0.0 Safari/537.36"
 
     fun create(
         isEnabledLogging: Boolean = true
@@ -28,31 +33,33 @@ object HttpClientFactory {
         followRedirects = true
 
         install(DefaultRequest) {
-            header(
-                HttpHeaders.UserAgent,
-                "Mozilla/5.0 (Linux; Android 14) " +
-                        "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                        "Chrome/131.0.0.0 Mobile Safari/537.36"
-            )
+            header(HttpHeaders.UserAgent, DESKTOP_UA)
 
-            header(
-                HttpHeaders.Accept,
-                "text/html,application/xhtml+xml," +
-                        "application/xml;q=0.9,*/*;q=0.8"
-            )
-
-            header(
-                HttpHeaders.AcceptLanguage,
-                "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
-            )
-
-            header(HttpHeaders.Referrer, "https://www.instagram.com/")
+            header("Sec-CH-UA", "\"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\", \"Google Chrome\";v=\"131\"")
+            header("Sec-CH-UA-Mobile", "?0")
+            header("Sec-CH-UA-Platform", "\"Windows\"")
+            header("Sec-CH-UA-Platform-Version", "\"15.0.0\"")
+            header("Sec-CH-UA-Arch", "\"x86\"")
+            header("Sec-CH-UA-Bitness", "\"64\"")
+            header("Sec-CH-UA-Full-Version-List",
+                "\"Chromium\";v=\"131.0.6778.86\", \"Not_A Brand\";v=\"24.0.0.0\", \"Google Chrome\";v=\"131.0.6778.86\"")
 
             header("Sec-Fetch-Dest", "document")
             header("Sec-Fetch-Mode", "navigate")
-            header("Sec-Fetch-Site", "same-origin")
+            header("Sec-Fetch-Site", "none")
             header("Sec-Fetch-User", "?1")
+
+            header("Upgrade-Insecure-Requests", "1")
+            header(HttpHeaders.Accept,
+                "text/html,application/xhtml+xml,application/xml;q=0.9," +
+                        "image/avif,image/webp,image/apng,*/*;q=0.8," +
+                        "application/signed-exchange;v=b3;q=0.7")
+
+            header(HttpHeaders.AcceptLanguage, "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7")
+            header("Priority", "u=0, i")
         }
+
+        install(HttpCookies)
 
         install(ContentNegotiation) {
             json(
@@ -75,10 +82,16 @@ object HttpClientFactory {
             install(Logging) {
                 logger = object : Logger {
                     override fun log(message: String) {
-                        Log.d("IIC", message)
+                        val chunk = 3_900
+                        when(message.length < chunk) {
+                            true -> Log.d("Instagram", message)
+                            false -> message.chunked(chunk).forEachIndexed {index, part ->
+                                Log.d("Instagram", "${index+1} $part")
+                            }
+                        }
                     }
                 }
-                level = LogLevel.ALL
+                level = LogLevel.HEADERS
             }
         }
     }

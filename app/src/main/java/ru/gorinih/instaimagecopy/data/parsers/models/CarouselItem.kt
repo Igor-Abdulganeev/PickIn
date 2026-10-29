@@ -10,5 +10,6 @@ data class CarouselItem(
     val mediaUrl: String?,
     val width: Int?,
     val height: Int?,
-    val author: String?
+    val author: String?,
+    val nickName: String?,
 )
