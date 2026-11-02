@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">InstaImageCopy</string>
-    <string name="button_text_waiting">Загрузить</string>
+    <string name="button_text_waiting">Загрузить публикацию</string>
     <string name="button_text_download_post">Загрузка страницы</string>
     <string name="button_text_download_media">Загрузка файлов</string>
     <string name="button_text_research">Обработка страницы</string>
@@ -11,4 +11,5 @@
     <string name="list_media_download_first">Все</string>
     <string name="list_media_download_second">Фото</string>
     <string name="list_media_download_third">Видео</string>
+    <string name="button_text_selected_download">Загрузить выбранное</string>
 </resources>

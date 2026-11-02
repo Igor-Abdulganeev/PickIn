@@ -56,6 +56,7 @@ class ImageCopyViewModel(
             }
         }
     private val mediaData: MutableList<MediaItem> = mutableListOf()
+    private val selectedData: MutableList<String> = mutableListOf()
 
     fun sHtml(html: String) {
         val file = storage.saveHtmlToFile(html)
@@ -87,8 +88,10 @@ class ImageCopyViewModel(
     fun onChangeUrl(newUrl: String, startIfPossibly: Boolean = false) {
         imageCopyState = imageCopyState.copy(url = newUrl)
         viewModelScope.launch {
-            delay(300.milliseconds) // задержка нужна прочитать текущие настройки
-            Log.e("Instagram","STARTING $startIfPossibly && ${imageCopyState.selectedTypeDownload}")
+            /**
+             * задержка нужна прочитать текущие настройки
+             */
+            delay(300.milliseconds)
             if (startIfPossibly && imageCopyState.selectedTypeDownload == TypeDownload.AUTO) getPostData()
         }
     }
@@ -126,122 +129,168 @@ class ImageCopyViewModel(
         )
     }
 
-    fun getPostData() {
-        imageCopyState = imageCopyState.copy(job = StatusJob.DOWNLOAD_POST, result = "Скачиваем пост")
-        viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
-            try {
-                when (val result = webLoader.loadPage(url = imageCopyState.url)) {
-                    is NetworkResult.Timeout -> {
-                        imageCopyState =
-                            imageCopyState.copy(result = "Запрос не вернул результат за отведенное время")
-                        println("Запрос не вернул результат за отведенное время ${result.errorMessage}")
-                    }
+    fun rotateVisibilityPreview() {
+        val visibility = imageCopyState.blocks[ScreenBlocks.PREVIEW] ?: false
+        imageCopyState = imageCopyState.copy(
+            blocks = imageCopyState.blocks.putting(ScreenBlocks.PREVIEW, !visibility)
+        )
+    }
 
-                    is NetworkResult.Error -> {
-                        imageCopyState =
-                            imageCopyState.copy(result = "Ошибка: ${result.errorMessage}")
-                        println("Ошибка ${result.errorMessage}")
-                    }
-
-                    is NetworkResult.Success -> {
-                        imageCopyState = imageCopyState.copy(job = StatusJob.RESEARCH,result = "Ищем ссылки на медиа")
-                        val page = result.data
-                        println("Страница скачана:")
-                        println("URL: ${page.requestedUrl}")
-                        println("HTTP: ${page.status}")
-                        println("Content-Type: ${page.contentType}")
-                        println("HTML length: ${page.html.length}")
-                        println("HTML: ${page.html.take(300)}")
-                        // Передаём HTML в парсер.
-                        storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
-
-                        val postJson = parser.parsePost(url = imageCopyState.url, html = page.html)
-
-                        when (postJson) {
-                            CarouselSearchResult.NotFound -> {
-                                imageCopyState =
-                                    imageCopyState.copy(result = "Не удалось найти ссылки")
-                                println("Не удалось найти JSON публикации")
-                            }
-
-                            CarouselSearchResult.AgeRestricted -> {
-                                imageCopyState =
-                                    imageCopyState.copy(result = "У публикации возрастные ограничения")
-                                println("У публикации возрастные ограничения")
-                            }
-
-                            is CarouselSearchResult.Found -> {
-                                println("JSON публикации найден:")
-                                mediaData.clear()
-                                mediaData.addAll(
-                                    parser.parseCarousel(postJson.media).map { it.toMediaItem() })
-                                imageCopyState =
-                                    imageCopyState.copy(result = "Найдено файлов ${mediaData.count()} (" +
-                                            "фото - ${mediaData.count { !it.isVideo }}" +
-                                            "видео - ${mediaData.count { it.isVideo }}")
-                                when(imageCopyState.selectedTypeDownload) {
-                                    TypeDownload.AUTO -> getMediaData()
-                                    TypeDownload.MANUAL -> {}
-                                    TypeDownload.NONE -> {}
-                                }
-                            }
-                        }
-                    }
-
-                    is NetworkResult.HttpError -> {
-                        imageCopyState =
-                            imageCopyState.copy(result = "Ошибка: ${result.errorCode} / ${result.errorMessage}")
-                        println("Ошибка http ${result.errorCode} / ${result.errorMessage}")
-                    }
-                }
-            } finally {
-                imageCopyState =
-                    imageCopyState.copy(job = StatusJob.WAITING_JOB) // todo изменить потом, менять в разделке
-            }
+    fun selectData(previewUrl: String) {
+        when (selectedData.contains(previewUrl)) {
+            true -> selectedData.remove(previewUrl)
+            false -> selectedData.add(previewUrl)
         }
     }
 
-    suspend fun getMediaData() {
-        val allMediaCount = mediaData.count()
-        val listOfMedia: List<String> = when(imageCopyState.selectedMediaDownload) {
+    fun getSelectedData() {
+        viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
+            val listOfMedia: List<String> =
+                mediaData.filter { it.previewUrl in selectedData }.map { it.mediaUrl }
+            if (listOfMedia.isNotEmpty())
+                getMediaData(listOfMedia)
+        }
+    }
+
+    fun getPostData() {
+        if (imageCopyState.url.isNotBlank()) {
+            imageCopyState =
+                imageCopyState.copy(job = StatusJob.DOWNLOAD_POST, result = "Скачиваем пост")
+            viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
+                try {
+                    when (val result = webLoader.loadPage(url = imageCopyState.url)) {
+                        is NetworkResult.Timeout -> {
+                            imageCopyState =
+                                imageCopyState.copy(result = "Запрос не вернул результат за отведенное время")
+                            println("Запрос не вернул результат за отведенное время ${result.errorMessage}")
+                        }
+
+                        is NetworkResult.Error -> {
+                            val errorText = when {
+                                result.errorMessage?.contains("CLEARTEXT") == true -> "введите корректный адрес"
+                                else -> result.errorMessage
+                            }
+                            imageCopyState =
+                                imageCopyState.copy(result = "Ошибка: $errorText")
+                        }
+
+                        is NetworkResult.Success -> {
+                            imageCopyState = imageCopyState.copy(
+                                job = StatusJob.RESEARCH,
+                                result = "Ищем ссылки на медиа"
+                            )
+                            val page = result.data
+                            println("Страница скачана:")
+                            println("URL: ${page.requestedUrl}")
+                            println("HTTP: ${page.status}")
+                            println("Content-Type: ${page.contentType}")
+                            println("HTML length: ${page.html.length}")
+                            println("HTML: ${page.html.take(300)}")
+                            // Передаём HTML в парсер.
+                            //storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
+
+                            val postJson =
+                                parser.parsePost(url = imageCopyState.url, html = page.html)
+
+                            when (postJson) {
+                                CarouselSearchResult.NotFound -> {
+                                    imageCopyState =
+                                        imageCopyState.copy(result = "Не удалось найти ссылки")
+                                    println("Не удалось найти JSON публикации")
+                                }
+
+                                CarouselSearchResult.AgeRestricted -> {
+                                    imageCopyState =
+                                        imageCopyState.copy(result = "У публикации возрастные ограничения")
+                                    println("У публикации возрастные ограничения")
+                                }
+
+                                is CarouselSearchResult.Found -> {
+                                    println("JSON публикации найден:")
+                                    mediaData.clear()
+                                    mediaData.addAll(
+                                        parser.parseCarousel(postJson.media)
+                                            .map { it.toMediaItem() })
+                                    imageCopyState =
+                                        imageCopyState.copy(
+                                            result = "Найдено файлов ${mediaData.count()} (" +
+                                                    " фото - ${mediaData.count { !it.isVideo }}" +
+                                                    " видео - ${mediaData.count { it.isVideo }} )"
+                                        )
+                                    when (imageCopyState.selectedTypeDownload) {
+                                        TypeDownload.AUTO -> getMediaData()
+                                        TypeDownload.MANUAL -> {
+                                            imageCopyState = imageCopyState.copy(
+                                                listMedia = mediaData,
+                                                blocks = imageCopyState.blocks.putting(
+                                                    ScreenBlocks.PREVIEW, true
+                                                )
+                                            )
+                                            Log.e("INSTAGRAM", "imageCopyState = $imageCopyState")
+                                        }
+
+                                        TypeDownload.NONE -> {}
+                                    }
+                                }
+                            }
+                        }
+
+                        is NetworkResult.HttpError -> {
+                            imageCopyState =
+                                imageCopyState.copy(result = "Ошибка: ${result.errorCode} / ${result.errorMessage}")
+                            println("Ошибка http ${result.errorCode} / ${result.errorMessage}")
+                        }
+                    }
+                } finally {
+                    imageCopyState =
+                        imageCopyState.copy(job = StatusJob.WAITING_JOB) // todo изменить потом, менять в разделке
+                }
+            }
+        } else {
+            imageCopyState =
+                imageCopyState.copy(result = "Ошибка: введите корректный адрес")
+        }
+    }
+
+    private suspend fun getMediaData() {
+        val listOfMedia: List<String> = when (imageCopyState.selectedMediaDownload) {
             MediaDownload.ALL -> mediaData.map { it.mediaUrl }
             MediaDownload.IMAGE -> mediaData.filter { !it.isVideo }.map { it.mediaUrl }
             MediaDownload.VIDEO -> mediaData.filter { it.isVideo }.map { it.mediaUrl }
             MediaDownload.NONE -> emptyList()
         }
+        if (listOfMedia.isNotEmpty())
+            getMediaData(listOfMedia)
+    }
+
+    private suspend fun getMediaData(listUrl: List<String>) {
+        val allMediaCount = mediaData.count()
+
         imageCopyState =
-            imageCopyState.copy(job = StatusJob.DOWNLOAD_MEDIA, result = "Найдено файлов $allMediaCount, скачиваем ${listOfMedia.count()}")
-/*
-        mediaData.forEachIndexed { index, item ->
-            Log.i(
-                "Instagram",
-                "Элемент ${index + 1}: " +
-                        "video=${item.isVideo}, " +
-                        "preview=${item.previewUrl}, " +
-                        "media=${item.mediaUrl}"
+            imageCopyState.copy(
+                job = StatusJob.DOWNLOAD_MEDIA,
+                result = "Найдено файлов $allMediaCount, скачиваем ${listUrl.count()}"
+            )
+        println("Скачиваем файлы")
+        try {
+            val downloaded = storage.downloadsFiles(
+                listUrl,
+                mediaData.first().author,
+                mediaData.first().nickName,
+            )
+            Log.d("Instagram", "Результат скачивания файлов ${downloaded.size}")
+            val downloadMediaCount = downloaded.count { it.errorMessage.isEmpty() }
+            if (allMediaCount == downloadMediaCount) imageCopyState =
+                imageCopyState.copy(url = "", listMedia = emptyList())
+            imageCopyState = imageCopyState.copy(
+                result = "Скачано файлов $downloadMediaCount из $allMediaCount",
+            )
+        } catch (ex: CancellationException) {
+            throw ex
+        } catch (ex: Throwable) {
+            imageCopyState = imageCopyState.copy(
+                result = "Ошибка: ${ex.localizedMessage}",
             )
         }
-*/
-        println("Скачиваем файлы")
-        val downloaded = storage.downloadsFiles(
-            listOfMedia,
-            mediaData.first().author,
-            mediaData.first().nickName,
-        )
-        Log.d("Instagram", "Результат скачивания файлов ${downloaded.size}")
-
-        val downloadMediaCount = downloaded.count { it.errorMessage.isEmpty() }
-        if (allMediaCount == downloadMediaCount)  imageCopyState = imageCopyState.copy(url = "")
-        imageCopyState = imageCopyState.copy(
-            result = "Скачано файлов $downloadMediaCount из $allMediaCount",
-        )
-        /*
-        downloaded.forEach { item ->
-            Log.i("Instagram", "Файл ${item.file}")
-            Log.i("Instagram", "    uri: ${item.uri}")
-            Log.i("Instagram", "    ошибка: ${item.errorMessage}")
-            Log.i("Instagram", "*********************************")
-        }
-         */
     }
 }

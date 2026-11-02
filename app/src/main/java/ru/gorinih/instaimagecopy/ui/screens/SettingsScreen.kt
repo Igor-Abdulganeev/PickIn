@@ -1,5 +1,6 @@
 package ru.gorinih.instaimagecopy.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -55,13 +56,17 @@ fun SettingsScreen(
             onClick = onClickDownloadType,
             text = stringResource(R.string.header_type_download_label)
         )
-        DividerHorizontalTransparent()
-        ChipPanelSelectTypeList(
-            selected = { selectedMediaType().index },
-            textChips = listOfMediaTypes,
-            onClick = onClickMediaType,
-            text = stringResource(R.string.header_media_download_label)
-        )
+        AnimatedVisibility(
+            visible =  selectedDownloadType().index == TypeDownload.AUTO.index
+        ) {
+            DividerHorizontalTransparent()
+            ChipPanelSelectTypeList(
+                selected = { selectedMediaType().index },
+                textChips = listOfMediaTypes,
+                onClick = onClickMediaType,
+                text = stringResource(R.string.header_media_download_label)
+            )
+        }
     }
 }
 
@@ -94,7 +99,7 @@ fun ChipPanelSelectTypeList(
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(percent = 10)
+                shape = RoundedCornerShape(size = 20.dp)
             ),
         content = {
             if (text.isNotEmpty()) {

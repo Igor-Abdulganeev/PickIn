@@ -41,6 +41,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -62,6 +63,8 @@ dependencies {
     implementation(libs.androidx.webkit)
     implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.datastore)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network)
 
     testImplementation(libs.junit)
 //    androidTestImplementation(libs.androidx.compose.ui.test.junit4)

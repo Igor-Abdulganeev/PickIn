@@ -1,6 +1,9 @@
 package ru.gorinih.instaimagecopy
 
 import android.app.Application
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import ru.gorinih.instaimagecopy.di.appModule
@@ -20,6 +23,10 @@ class ImageCopyApplication: Application() {
                 appModule,
                 networkModule
             )
+        }
+
+        SingletonImageLoader.setSafe {
+            get<ImageLoader>()
         }
     }
 }

@@ -14,7 +14,8 @@ data class UiState (
     val result: String = "",
     val blocks: PersistentMap<ScreenBlocks, Boolean> = mapOf<ScreenBlocks, Boolean>(
         ScreenBlocks.INPUT to true,
-        ScreenBlocks.SETTINGS to false
+        ScreenBlocks.SETTINGS to false,
+        ScreenBlocks.PREVIEW to true
     ).toPersistentMap(),
     val selectedTypeDownload: TypeDownload = TypeDownload.NONE,
     val selectedMediaDownload: MediaDownload = MediaDownload.NONE,

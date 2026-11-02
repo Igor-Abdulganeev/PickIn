@@ -7,4 +7,5 @@ package ru.gorinih.instaimagecopy.ui.models
 enum class ScreenBlocks {
     INPUT,
     SETTINGS,
+    PREVIEW,
 }

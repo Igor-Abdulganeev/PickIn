@@ -14,6 +14,7 @@ koin = "4.2.2"
 collectionImmutable = "0.5.2"
 webkit = "1.18.0"
 dataStore = "1.3.0"
+coilVersion = "3.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,7 +32,12 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 #androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material-icons = {group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-webkit = {group = "androidx.webkit", name="webkit", version.ref = "webkit"}
+androidx-datastore-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "dataStore" }
+androidx-datastore = {group="androidx.datastore", name="datastore-preferences", version.ref="dataStore"}
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilVersion" }
+coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coilVersion" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -45,8 +51,6 @@ koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android" }
 
-androidx-datastore-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "dataStore" }
-androidx-datastore = {group="androidx.datastore", name="datastore-preferences", version.ref="dataStore"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
