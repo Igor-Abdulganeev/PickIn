@@ -12,6 +12,7 @@ data class ImagePreview(
     val sharedTransitionScope: SharedTransitionScope,
     val animatedVisibilityScope: AnimatedVisibilityScope,
     val selectedPreviewUrl: String,
+    val transitionPreviewUrl: String?,
     val onLongClick: (String) -> Unit
 )
 

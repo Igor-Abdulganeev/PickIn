@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -14,11 +15,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,6 +33,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +46,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
 import ru.gorinih.instaimagecopy.ui.models.ImagePreview
 import ru.gorinih.instaimagecopy.ui.models.LocalImagePreview
@@ -66,6 +70,11 @@ class ImageCopyActivity : ComponentActivity() {
                 val viewModel: ImageCopyViewModel = koinViewModel()
                 val imageCopyState = viewModel.imageCopyState
                 var selectedPreviewUrl by rememberSaveable { mutableStateOf("") }
+                var transitionPreviewUrl by remember { mutableStateOf<String?>(null) }
+                var closingPreviewUrl by remember { mutableStateOf<String?>(null) }
+                var pendingPreviewUrl by remember { mutableStateOf<String?>(null) }
+                val previewVisibilityState = remember { MutableTransitionState(false) }
+                val overlayInteractionSource = remember { MutableInteractionSource() }
 
                 LaunchedEffect(incomingIntentUriState.value) {
                     incomingIntentUriState.value?.let {
@@ -74,19 +83,67 @@ class ImageCopyActivity : ComponentActivity() {
                     }
                 }
                 SharedTransitionLayout {
+
+                    val sharedScope = this
+                    LaunchedEffect(closingPreviewUrl) {
+                        val closingUrl = closingPreviewUrl
+                            ?: return@LaunchedEffect
+                        snapshotFlow { sharedScope.isTransitionActive }.first { it }// Ждём начала обратного SharedTransition.
+                        snapshotFlow { sharedScope.isTransitionActive }.first { !it }// Ждём завершения SharedTransition.
+                        snapshotFlow {
+                            previewVisibilityState.isIdle &&
+                                    !previewVisibilityState.currentState
+                        }.first { it }// Ждём окончания fadeOut оверлея.
+                        if (
+                            transitionPreviewUrl == closingUrl &&
+                            selectedPreviewUrl.isEmpty()
+                        ) {
+                            transitionPreviewUrl = null
+                        }// Удаляем временный элемент.
+                        closingPreviewUrl = null
+                    }
+
+                    LaunchedEffect(pendingPreviewUrl) {
+                        val requestedUrl = pendingPreviewUrl
+                            ?: return@LaunchedEffect
+                        snapshotFlow {
+                            closingPreviewUrl == null &&
+                                    previewVisibilityState.isIdle &&
+                                    !previewVisibilityState.currentState &&
+                                    !sharedScope.isTransitionActive
+                        }.first { it }// Ждём полного завершения предыдущего закрытия.
+                        if (pendingPreviewUrl != requestedUrl) {
+                            return@LaunchedEffect
+                        }// Проверяем, что запрос ещё актуален.
+                        transitionPreviewUrl = requestedUrl// Создаём временный shared-элемент.
+                        withFrameNanos { }// Даём Compose разместить его в исходных координатах.
+                        if (
+                            pendingPreviewUrl == requestedUrl &&
+                            closingPreviewUrl == null &&
+                            previewVisibilityState.isIdle &&
+                            !previewVisibilityState.currentState &&
+                            !sharedScope.isTransitionActive
+                        ) {
+                            selectedPreviewUrl = requestedUrl
+                            previewVisibilityState.targetState = true
+                            pendingPreviewUrl = null
+                        }// Перед открытием ещё раз проверяем состояние.
+                    }
+
                     AnimatedVisibility(
                         visible = true,
                         label = "MainScreenScope",
                         modifier = Modifier.fillMaxSize()
                     ) {
                         val previewerContext =
-                            remember(selectedPreviewUrl, this, this@SharedTransitionLayout) {
+                            remember(selectedPreviewUrl, transitionPreviewUrl, this, sharedScope) {
                                 ImagePreview(
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = this,
                                     selectedPreviewUrl = selectedPreviewUrl,
+                                    transitionPreviewUrl = transitionPreviewUrl,
                                     onLongClick = { previewUrl ->
-                                        selectedPreviewUrl = previewUrl
+                                        pendingPreviewUrl = previewUrl
                                     }
                                 )
                             }
@@ -177,26 +234,40 @@ class ImageCopyActivity : ComponentActivity() {
                                     }
 
                                     AnimatedVisibility(
-                                        visible = selectedPreviewUrl.isNotEmpty(),
-                                        enter = fadeIn(tween(400)),
+                                        visibleState = previewVisibilityState,
+                                        enter = fadeIn(tween(200)),
                                         exit = fadeOut(tween(200)),
                                         label = "ImagePreviewScope",
                                         modifier = Modifier.fillMaxSize()
                                     ) {
+                                        val imageUrl =
+                                            transitionPreviewUrl ?: return@AnimatedVisibility
                                         val overlayVisibilityScope = this
                                         val context = LocalContext.current
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxSize()
-                                                .background(Color.Black.copy(alpha = 0.3f))
-                                                .clickable(
-                                                    onClick = { selectedPreviewUrl = "" }
+                                                .background(Color.Transparent)
+                                                .then(
+                                                    if (previewVisibilityState.targetState) {
+                                                        Modifier.clickable(
+                                                            interactionSource = overlayInteractionSource,
+                                                            indication = null
+                                                        ) {
+                                                            selectedPreviewUrl = ""
+                                                            previewVisibilityState.targetState =
+                                                                false
+                                                            closingPreviewUrl = transitionPreviewUrl
+                                                        }
+                                                    } else {
+                                                        Modifier
+                                                    }
                                                 ),
                                             contentAlignment = Alignment.Center) {
                                             AsyncImage(
                                                 model = ImageRequest.Builder(context)
-                                                    .data(selectedPreviewUrl)
-                                                    .placeholderMemoryCacheKey(selectedPreviewUrl)
+                                                    .data(imageUrl)
+                                                    .placeholderMemoryCacheKey(imageUrl)
                                                     .crossfade(false)
                                                     .build(),
                                                 contentDescription = null,
@@ -204,7 +275,7 @@ class ImageCopyActivity : ComponentActivity() {
                                                 modifier = Modifier
                                                     .sharedElement(
                                                         sharedContentState = rememberSharedContentState(
-                                                            selectedPreviewUrl
+                                                            imageUrl
                                                         ),
                                                         animatedVisibilityScope = overlayVisibilityScope,
                                                         boundsTransform = { _, _ -> spring(stiffness = Spring.StiffnessLow) }
@@ -213,7 +284,6 @@ class ImageCopyActivity : ComponentActivity() {
                                             )
                                         }
                                     }
-
                                 }
                             }
                         }
