@@ -1,7 +1,7 @@
 package ru.gorinih.instaimagecopy.ui.views
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import ru.gorinih.instaimagecopy.R
+import ru.gorinih.instaimagecopy.ui.models.LocalImagePreview
 import ru.gorinih.instaimagecopy.ui.models.MediaItem
 
 /**
@@ -38,9 +39,10 @@ fun ItemMediaCard(
     media: MediaItem,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
 ) {
     val context = LocalContext.current
+    val preview = LocalImagePreview.current ?: return
     Column(
         modifier = modifier.border(
             width = 1.dp,
@@ -67,27 +69,39 @@ fun ItemMediaCard(
                 tint = if (isSelected) Color(red = 0.8f, green = 0.33f, blue = 0.0f) else Color.Gray
             )
         }
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(media.previewUrl)
-                .placeholderMemoryCacheKey(media.previewUrl)
-                .build(),
-            contentDescription = media.author,
-            placeholder = painterResource(R.drawable.instplaceholder),
-            error = painterResource(R.drawable.pht),
-            contentScale = ContentScale.FillWidth,
-            alpha = if (isSelected) 0.5f else 1f,
-            modifier = Modifier
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(size = 20.dp)
-                )
-                .clip(shape = RoundedCornerShape(size = 20.dp))
-                .aspectRatio(1f)
-                .clickable(enabled = true) {
-                    onClick(media.previewUrl)
-                }
-        )
+        with(preview.sharedTransitionScope) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(media.previewUrl)
+                    .placeholderMemoryCacheKey(media.previewUrl)
+                    .build(),
+                contentDescription = media.author,
+                placeholder = painterResource(R.drawable.instplaceholder),
+                error = painterResource(R.drawable.pht),
+                contentScale = ContentScale.FillWidth,
+                alpha = if (isSelected) 0.5f else 1f,
+                modifier = Modifier
+                    .combinedClickable(
+                        enabled = true,
+                        onClick = {
+                            onClick(media.previewUrl)
+                        },
+                        onLongClick = {
+                            preview.onLongClick(media.previewUrl)
+                        }
+                    )
+                    .sharedElementWithCallerManagedVisibility(
+                        sharedContentState = rememberSharedContentState(media.previewUrl),
+                        visible = preview.selectedPreviewUrl != media.previewUrl
+                    )
+                    .aspectRatio(1f)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = RoundedCornerShape(size = 20.dp)
+                    )
+                    .clip(shape = RoundedCornerShape(size = 20.dp))
+            )
+        }
     }
 }
