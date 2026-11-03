@@ -6,21 +6,25 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.compose.viewmodel.koinViewModel
 import ru.gorinih.instaimagecopy.ui.models.ScreenBlocks
 import ru.gorinih.instaimagecopy.ui.screens.EnterUrlScreen
+import ru.gorinih.instaimagecopy.ui.screens.HelpScreen
 import ru.gorinih.instaimagecopy.ui.screens.PreviewScreen
 import ru.gorinih.instaimagecopy.ui.screens.SettingsScreen
 import ru.gorinih.instaimagecopy.ui.theme.InstaImageCopyTheme
@@ -39,10 +43,10 @@ class ImageCopyActivity : ComponentActivity() {
                 val imageCopyState = viewModel.imageCopyState
 
                 LaunchedEffect(incomingIntentUriState.value) {
-                        incomingIntentUriState.value?.let {
-                            viewModel.onChangeUrl(it, true)
-                            incomingIntentUriState.value = null
-                        }
+                    incomingIntentUriState.value?.let {
+                        viewModel.onChangeUrl(it, true)
+                        incomingIntentUriState.value = null
+                    }
                 }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
@@ -53,33 +57,40 @@ class ImageCopyActivity : ComponentActivity() {
                             }
                         )
 */
-               //         Row(modifier = Modifier.fillMaxWidth()) {
-                            Button(
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            ElevatedButton(
                                 onClick = {
                                     viewModel.rotateVisibilitySettings()
                                 },
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                          //      modifier = Modifier.weight(1f)
-                            ) { Text(text = "Настройки") }
-                            /*
-                            Button(
+                            ) { Text(text = stringResource(R.string.button_text_settings)) }
+                            ElevatedButton(
                                 onClick = {
-                                    viewModel.rotateVisibilityPreview()
+                                    viewModel.rotateVisibilityHelp()
                                 },
-                                modifier = Modifier.weight(1f)
-                            ) { Text(text = "Предпросмотр") }
-                            */
-                   //     }
+                            ) { Text(text = stringResource(R.string.button_text_help)) }
+                        }
                         if (imageCopyState.blocks[ScreenBlocks.INPUT] == true)
                             EnterUrlScreen(
                                 url = { imageCopyState.url },
                                 job = { imageCopyState.job },
                                 result = { imageCopyState.result },
+                                typeDownload = { imageCopyState.selectedTypeDownload },
                                 onChangeUrl = { newUrl -> viewModel.onChangeUrl(newUrl = newUrl) },
                                 onDownloadUrl = { viewModel.getPostData() },
+                                onClear = { viewModel.clear() }
                             )
                         AnimatedVisibility(
-                         visible = imageCopyState.blocks[ScreenBlocks.SETTINGS] == true
+                            visible = imageCopyState.blocks[ScreenBlocks.HELP] == true
+                        ) {
+                            HelpScreen()
+                        }
+                        AnimatedVisibility(
+                            visible = imageCopyState.blocks[ScreenBlocks.SETTINGS] == true
                         ) {
                             SettingsScreen(
                                 selectedDownloadType = { imageCopyState.selectedTypeDownload },
@@ -116,7 +127,7 @@ class ImageCopyActivity : ComponentActivity() {
     }
 
     private fun extractUrl(intent: Intent): String? {
-        val sharedText = when(intent.action) {
+        val sharedText = when (intent.action) {
             Intent.ACTION_SEND -> {
                 intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
             }
@@ -124,6 +135,7 @@ class ImageCopyActivity : ComponentActivity() {
             Intent.ACTION_VIEW -> {
                 intent.dataString
             }
+
             else -> null
         } ?: return null
 

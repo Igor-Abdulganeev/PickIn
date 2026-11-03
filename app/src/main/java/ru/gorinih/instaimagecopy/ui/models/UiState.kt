@@ -11,7 +11,7 @@ import kotlinx.collections.immutable.toPersistentMap
 data class UiState (
     val url: String = "",
     val job: StatusJob = StatusJob.WAITING_JOB,
-    val result: String = "",
+    val result: ResultMessage = ResultMessage(message = 0, type = TypeResult.DONE),
     val blocks: PersistentMap<ScreenBlocks, Boolean> = mapOf<ScreenBlocks, Boolean>(
         ScreenBlocks.INPUT to true,
         ScreenBlocks.SETTINGS to false,

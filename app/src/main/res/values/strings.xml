@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">InstaImageCopy</string>
-    <string name="button_text_waiting">Загрузить публикацию</string>
+    <string name="button_text_waiting_auto">Загрузить публикацию</string>
+    <string name="button_text_waiting_manual">Обработать публикацию</string>
     <string name="button_text_download_post">Загрузка страницы</string>
     <string name="button_text_download_media">Загрузка файлов</string>
     <string name="button_text_research">Обработка страницы</string>
@@ -12,4 +13,24 @@
     <string name="list_media_download_second">Фото</string>
     <string name="list_media_download_third">Видео</string>
     <string name="button_text_selected_download">Загрузить выбранное</string>
+    <string name="button_text_clear">Очистить</string>
+    <string name="edit_text_label">введите адрес</string>
+    <string name="header_status_label">Статус:</string>
+    <string name="button_text_settings">Настройки</string>
+    <string name="button_text_help">Помощь</string>
+
+    <string name="result_message_start">Введите адрес публикации</string>
+    <string name="result_message_founded">Найдено файлов %1$s, скачиваем %2$s</string>
+    <string name="result_message_downloaded">Скачано файлов %1$s из %2$s</string>
+    <string name="result_message_download_post">Скачиваем пост</string>
+    <string name="result_message_looking_for_media">Ищем ссылки на медиа</string>
+    <string name="result_message_not_founded_media">Не удалось найти ссылки</string>
+    <string name="result_message_adult">У публикации возрастные ограничения</string>
+    <string name="result_message_founded_media">"Найдено файлов %1$s ( фото - %2$s, видео - %3$s )"</string>
+    <string name="result_message_error">Ошибка: %1$s</string>
+    <string name="result_message_unknown_error">Неизвестная ошибка, попробуйте еще раз</string>
+    <string name="result_message_error_url">Введите корректный адрес</string>
+    <string name="result_message_error_time">Запрос не вернул результат за отведенное время</string>
+
+    <string name="help_text">Программа предназначена для скачивания медиа данных из Instagram.\nПоддерживаются открытые посты и рилс.\nЗакрытые посты, статусы, посты с ограничениями по возрасту можно получить только при входе в Instagram, т.к. пока программа не поддерживает (и наверно не будет) ввод логина пользователя (исключительно для безопасности) то и скачать данные таких постов не получится.</string>
 </resources>
