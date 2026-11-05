@@ -3,6 +3,7 @@ package ru.gorinih.instaimagecopy
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -23,7 +24,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
@@ -56,6 +56,7 @@ import ru.gorinih.instaimagecopy.ui.screens.HelpScreen
 import ru.gorinih.instaimagecopy.ui.screens.PreviewScreen
 import ru.gorinih.instaimagecopy.ui.screens.SettingsScreen
 import ru.gorinih.instaimagecopy.ui.theme.InstaImageCopyTheme
+import ru.gorinih.instaimagecopy.ui.views.ElevateButton
 
 class ImageCopyActivity : ComponentActivity() {
 
@@ -63,7 +64,9 @@ class ImageCopyActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        incomingIntentUriState.value = extractUrl(intent)
+        if (savedInstanceState == null) {
+            incomingIntentUriState.value = extractUrl(intent)
+        }
         enableEdgeToEdge()
         setContent {
             InstaImageCopyTheme {
@@ -75,6 +78,18 @@ class ImageCopyActivity : ComponentActivity() {
                 var pendingPreviewUrl by remember { mutableStateOf<String?>(null) }
                 val previewVisibilityState = remember { MutableTransitionState(false) }
                 val overlayInteractionSource = remember { MutableInteractionSource() }
+                val closePreview = {
+                    if (previewVisibilityState.targetState) {
+                        selectedPreviewUrl = ""
+                        previewVisibilityState.targetState = false
+                        closingPreviewUrl = transitionPreviewUrl
+                    }
+                }
+
+                BackHandler(
+                    enabled = previewVisibilityState.currentState ||
+                            previewVisibilityState.targetState
+                ) { closePreview() }
 
                 LaunchedEffect(incomingIntentUriState.value) {
                     incomingIntentUriState.value?.let {
@@ -170,16 +185,18 @@ class ImageCopyActivity : ComponentActivity() {
                                                 .padding(horizontal = 16.dp),
                                             horizontalArrangement = Arrangement.SpaceAround
                                         ) {
-                                            ElevatedButton(
-                                                onClick = {
+                                            ElevateButton(
+                                                text = { Text(text = stringResource(R.string.button_text_settings)) },
+                                                onSavedClick = {
                                                     viewModel.rotateVisibilitySettings()
                                                 },
-                                            ) { Text(text = stringResource(R.string.button_text_settings)) }
-                                            ElevatedButton(
-                                                onClick = {
+                                            )
+                                            ElevateButton(
+                                                text = { Text(text = stringResource(R.string.button_text_help)) },
+                                                onSavedClick = {
                                                     viewModel.rotateVisibilityHelp()
-                                                },
-                                            ) { Text(text = stringResource(R.string.button_text_help)) }
+                                                }
+                                            )
                                         }
                                         if (imageCopyState.blocks[ScreenBlocks.INPUT] == true)
                                             EnterUrlScreen(
@@ -206,15 +223,15 @@ class ImageCopyActivity : ComponentActivity() {
                                             SettingsScreen(
                                                 selectedDownloadType = { imageCopyState.selectedTypeDownload },
                                                 selectedMediaType = { imageCopyState.selectedMediaDownload },
+                                                selectedAutoComplete = { imageCopyState.selectedAutoComplete },
                                                 onClickDownloadType = {
-                                                    viewModel.onChangeTypeDownload(
-                                                        it
-                                                    )
+                                                    viewModel.onChangeTypeDownload(it)
                                                 },
                                                 onClickMediaType = {
-                                                    viewModel.onChangeMediaDownload(
-                                                        it
-                                                    )
+                                                    viewModel.onChangeMediaDownload(it)
+                                                },
+                                                onClickAutoComplete = {
+                                                    viewModel.onChangeAutoComplete(it)
                                                 }
                                             )
                                         }
@@ -222,6 +239,7 @@ class ImageCopyActivity : ComponentActivity() {
                                             visible = imageCopyState.blocks[ScreenBlocks.PREVIEW] == true
                                         ) {
                                             PreviewScreen(
+                                                job = { imageCopyState.job },
                                                 listMedia = imageCopyState.listMedia.toImmutableList(),
                                                 onStartDownload = {
                                                     viewModel.getSelectedData()
@@ -252,18 +270,15 @@ class ImageCopyActivity : ComponentActivity() {
                                                     if (previewVisibilityState.targetState) {
                                                         Modifier.clickable(
                                                             interactionSource = overlayInteractionSource,
-                                                            indication = null
-                                                        ) {
-                                                            selectedPreviewUrl = ""
-                                                            previewVisibilityState.targetState =
-                                                                false
-                                                            closingPreviewUrl = transitionPreviewUrl
-                                                        }
+                                                            indication = null,
+                                                            onClick = closePreview
+                                                        )
                                                     } else {
                                                         Modifier
                                                     }
                                                 ),
-                                            contentAlignment = Alignment.Center) {
+                                            contentAlignment = Alignment.Center
+                                        ) {
                                             AsyncImage(
                                                 model = ImageRequest.Builder(context)
                                                     .data(imageUrl)

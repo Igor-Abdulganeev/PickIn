@@ -19,6 +19,7 @@ data class UiState (
     ).toPersistentMap(),
     val selectedTypeDownload: TypeDownload = TypeDownload.NONE,
     val selectedMediaDownload: MediaDownload = MediaDownload.NONE,
+    val selectedAutoComplete: Boolean = false,
     @Stable
     val listMedia: List<MediaItem> = emptyList()
 )

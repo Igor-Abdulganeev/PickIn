@@ -85,17 +85,28 @@ class ImageCopyViewModel(
                             ?: MediaDownload.NONE
                     )
                 }.stateIn(viewModelScope)
+            dataStore.loadKeyAutoComplete()
+                .catch {  }
+                .onEach { value ->
+                    imageCopyState = imageCopyState.copy(
+                        selectedAutoComplete = value
+                    )
+                }.stateIn(viewModelScope)
         }
     }
 
     fun onChangeUrl(newUrl: String, startIfPossibly: Boolean = false) {
+        if (startIfPossibly) clear(newUrl) else
         imageCopyState = imageCopyState.copy(url = newUrl)
         viewModelScope.launch {
             /**
-             * задержка нужна прочитать текущие настройки
+             * задержка нужно прочитать текущие настройки
              */
             delay(300.milliseconds)
-            if (startIfPossibly && imageCopyState.selectedTypeDownload == TypeDownload.AUTO) getPostData()
+            when{
+                startIfPossibly && imageCopyState.selectedTypeDownload == TypeDownload.AUTO -> getPostData()
+                startIfPossibly && imageCopyState.selectedTypeDownload == TypeDownload.MANUAL && imageCopyState.selectedAutoComplete -> getPostData()
+            }
         }
     }
 
@@ -125,6 +136,17 @@ class ImageCopyViewModel(
         }
     }
 
+    fun onChangeAutoComplete(value: Boolean) {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                dataStore.saveKeyAutoComplete(value)
+            } catch (ex: CancellationException) {
+                throw ex
+            } catch (_: Throwable) {
+            }
+        }
+    }
+
     fun rotateVisibilitySettings() {
         rotateVisibilityScreen(ScreenBlocks.SETTINGS)
     }
@@ -144,11 +166,11 @@ class ImageCopyViewModel(
         }
     }
 
-    fun clear() {
+    fun clear(url: String = "") {
         mediaData.clear()
         selectedData.clear()
         imageCopyState = imageCopyState.copy(
-            url = "",
+            url = url,
             job = StatusJob.WAITING_JOB,
             result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
             listMedia = emptyList()
@@ -270,7 +292,6 @@ class ImageCopyViewModel(
                                                     ScreenBlocks.PREVIEW, true
                                                 )
                                             )
-                                            Log.e("INSTAGRAM", "imageCopyState = $imageCopyState")
                                         }
 
                                         TypeDownload.NONE -> {
@@ -299,7 +320,7 @@ class ImageCopyViewModel(
                     }
                 } finally {
                     imageCopyState =
-                        imageCopyState.copy(job = StatusJob.WAITING_JOB) // todo изменить потом, менять в разделке
+                        imageCopyState.copy(job = StatusJob.WAITING_JOB)
                 }
             }
         } else {
@@ -354,7 +375,7 @@ class ImageCopyViewModel(
                 imageCopyState.copy(
                     url = "",
                     listMedia = emptyList()
-                ) // TODO тут настройки что чистить
+                )
             imageCopyState = imageCopyState.copy(
                 result = ResultMessage(
                     R.string.result_message_downloaded,

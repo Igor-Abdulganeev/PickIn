@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +22,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import ru.gorinih.instaimagecopy.R
 import ru.gorinih.instaimagecopy.ui.models.MediaItem
+import ru.gorinih.instaimagecopy.ui.models.StatusJob
 import ru.gorinih.instaimagecopy.ui.views.DividerHorizontalTransparent
+import ru.gorinih.instaimagecopy.ui.views.ElevateButton
 import ru.gorinih.instaimagecopy.ui.views.ItemMediaCard
 
 /**
@@ -33,6 +34,7 @@ import ru.gorinih.instaimagecopy.ui.views.ItemMediaCard
 @Composable
 fun PreviewScreen(
     listMedia: ImmutableList<MediaItem>,
+    job: () -> StatusJob,
     onStartDownload: () -> Unit,
     onClickMedia: (String) -> Unit
 ) {
@@ -51,15 +53,14 @@ fun PreviewScreen(
                 )
         ) {
 
-            Button(
+            ElevateButton(
+                text = { Text(text = stringResource(R.string.button_text_selected_download)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                enabled = selectedMedia.isNotEmpty(),
-                onClick = onStartDownload
-            ) {
-                Text(text = stringResource(R.string.button_text_selected_download))
-            }
+                    .padding(vertical = 8.dp, horizontal = 8.dp),
+                enabled = selectedMedia.isNotEmpty() && job() == StatusJob.WAITING_JOB,
+                onSavedClick = onStartDownload
+            )
             DividerHorizontalTransparent(modifier = Modifier.padding(vertical = 8.dp))
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),

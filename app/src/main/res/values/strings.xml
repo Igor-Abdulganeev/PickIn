@@ -12,6 +12,7 @@
     <string name="list_media_download_first">Все</string>
     <string name="list_media_download_second">Фото</string>
     <string name="list_media_download_third">Видео</string>
+    <string name="setting_key_auto_complete">Автообработка публикации</string>
     <string name="button_text_selected_download">Загрузить выбранное</string>
     <string name="button_text_clear">Очистить</string>
     <string name="edit_text_label">введите адрес</string>

@@ -24,4 +24,6 @@ interface DataStoreRepository {
     fun loadTypeDownload(): Flow<Int>
     suspend fun saveMediaDownload(value: MediaDownload)
     fun loadMediaDownload(): Flow<Int>
+    suspend fun saveKeyAutoComplete(value: Boolean)
+    fun loadKeyAutoComplete(): Flow<Boolean>
 }

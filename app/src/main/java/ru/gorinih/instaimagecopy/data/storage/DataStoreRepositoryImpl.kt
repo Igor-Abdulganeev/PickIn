@@ -2,6 +2,7 @@ package ru.gorinih.instaimagecopy.data.storage
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -38,8 +39,20 @@ class DataStoreRepositoryImpl(
             pref[intPreferencesKey(MEDIA_DOWNLOAD)] ?: 100
         }
 
+    override suspend fun saveKeyAutoComplete(value: Boolean) {
+        dataStore.edit { pref ->
+            pref[booleanPreferencesKey(KEY_AUTO_COMPLETE)] = value
+        }
+    }
+
+    override fun loadKeyAutoComplete(): Flow<Boolean> =
+        dataStore.data.map { pref ->
+            pref[booleanPreferencesKey(KEY_AUTO_COMPLETE)] ?: false
+        }
+
     companion object {
         private const val TYPE_DOWNLOAD = "instagram.type.download"
         private const val MEDIA_DOWNLOAD = "instagram.media.download"
+        private const val KEY_AUTO_COMPLETE = "instagram.auto.complete"
     }
 }

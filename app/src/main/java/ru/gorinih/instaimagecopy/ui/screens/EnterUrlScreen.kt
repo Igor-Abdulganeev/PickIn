@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -23,6 +22,7 @@ import ru.gorinih.instaimagecopy.ui.models.ResultMessage
 import ru.gorinih.instaimagecopy.ui.models.StatusJob
 import ru.gorinih.instaimagecopy.ui.models.TypeDownload
 import ru.gorinih.instaimagecopy.ui.models.TypeResult
+import ru.gorinih.instaimagecopy.ui.views.ElevateButton
 
 /**
  * Created by Igor Abdulganeev on 21.10.2026
@@ -54,33 +54,35 @@ fun EnterUrlScreen(
         )
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceAround) {
-            ElevatedButton(
-                onClick = { onDownloadUrl() },
-                enabled = currentJob == StatusJob.WAITING_JOB
-            ) {
-                Text(
-                    text = stringResource(
-                        when (currentJob) {
-                            StatusJob.WAITING_JOB -> when (typeDownload()) {
-                                TypeDownload.AUTO -> R.string.button_text_waiting_auto
-                                else -> R.string.button_text_waiting_manual
-                            }
+            ElevateButton(
+                onSavedClick = { onDownloadUrl() },
+                enabled = currentJob == StatusJob.WAITING_JOB,
+                text = {
+                    Text(
+                        text = stringResource(
+                            when (currentJob) {
+                                StatusJob.WAITING_JOB -> when (typeDownload()) {
+                                    TypeDownload.AUTO -> R.string.button_text_waiting_auto
+                                    else -> R.string.button_text_waiting_manual
+                                }
 
-                            StatusJob.DOWNLOAD_POST -> R.string.button_text_download_post
-                            StatusJob.DOWNLOAD_MEDIA -> R.string.button_text_download_media
-                            StatusJob.RESEARCH -> R.string.button_text_research
-                        }
+                                StatusJob.DOWNLOAD_POST -> R.string.button_text_download_post
+                                StatusJob.DOWNLOAD_MEDIA -> R.string.button_text_download_media
+                                StatusJob.RESEARCH -> R.string.button_text_research
+                            }
+                        )
                     )
-                )
-            }
-            ElevatedButton(
-                onClick = onClear,
-                enabled = currentJob == StatusJob.WAITING_JOB
-            ) {
-                Text(
-                    text = stringResource(R.string.button_text_clear)
-                )
-            }
+                }
+            )
+            ElevateButton(
+                onSavedClick = onClear,
+                enabled = currentJob == StatusJob.WAITING_JOB,
+                text = {
+                    Text(
+                        text = stringResource(R.string.button_text_clear)
+                    )
+                }
+            )
         }
         Text(
             text = stringResource(R.string.header_status_label),

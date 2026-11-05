@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,8 +36,10 @@ import ru.gorinih.instaimagecopy.ui.views.DividerHorizontalTransparent
 fun SettingsScreen(
     selectedDownloadType: () -> TypeDownload,
     selectedMediaType: () -> MediaDownload,
+    selectedAutoComplete: () -> Boolean,
     onClickDownloadType: (Int) -> Unit,
     onClickMediaType: (Int) -> Unit,
+    onClickAutoComplete: (Boolean) -> Unit
 ) {
     val listOfDownloadTypes = listOf(
         stringResource(R.string.list_type_download_first),
@@ -56,15 +61,29 @@ fun SettingsScreen(
             onClick = onClickDownloadType,
             text = stringResource(R.string.header_type_download_label)
         )
+        DividerHorizontalTransparent()
         AnimatedVisibility(
-            visible =  selectedDownloadType().index == TypeDownload.AUTO.index
+            visible = selectedDownloadType().index == TypeDownload.AUTO.index
         ) {
-            DividerHorizontalTransparent()
             ChipPanelSelectTypeList(
                 selected = { selectedMediaType().index },
                 textChips = listOfMediaTypes,
                 onClick = onClickMediaType,
                 text = stringResource(R.string.header_media_download_label)
+            )
+        }
+        AnimatedVisibility(
+            visible = selectedDownloadType().index == TypeDownload.MANUAL.index
+        ) {
+            ChipPanelSelectTypeList(
+                selected = {
+                    if(selectedAutoComplete()) 0 else 100
+                },
+                textChips = listOf(stringResource(R.string.setting_key_auto_complete)).toImmutableList(),
+                onClick = {
+                    onClickAutoComplete(!selectedAutoComplete())
+                },
+                needIcon = true
             )
         }
     }
@@ -75,10 +94,12 @@ fun SettingsScreen(
 fun SettingsScreenPreview() {
     InstaImageCopyTheme {
         SettingsScreen(
-            selectedDownloadType = { TypeDownload.MANUAL },
+            selectedDownloadType = { TypeDownload.AUTO },
             selectedMediaType = { MediaDownload.IMAGE },
+            selectedAutoComplete = { true },
             onClickDownloadType = {},
-            onClickMediaType = {}
+            onClickMediaType = {},
+            onClickAutoComplete = {}
         )
     }
 }
@@ -90,6 +111,7 @@ fun ChipPanelSelectTypeList(
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     text: String = "",
+    needIcon: Boolean = false,
 ) {
     val select = selected()
     FlowRow(
@@ -109,39 +131,64 @@ fun ChipPanelSelectTypeList(
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp),
                     textAlign = TextAlign.Center
-                    )
+                )
             }
             textChips.forEachIndexed { index, text ->
-                val colorTypeTextButton = when {
-                    index == select -> MaterialTheme.colorScheme.onSurface
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
-                FilterChip(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    onClick = { onClick(index) },
-                    label = {
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    },
-                    enabled = true,
-                    selected = index == select,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedLabelColor = colorTypeTextButton,
-                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                            .copy(alpha = 0.2f),
-                        disabledSelectedContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                            .copy(alpha = 0.5f),
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                            .copy(alpha = 0.4f)
-                    ),
-                    border = null
+                ChipItem(
+                    text = text,
+                    index = index,
+                    isSelected = index == select,
+                    onClick = onClick,
+                    leadIcon = if(needIcon) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Bolt,
+                                contentDescription = null,
+                                tint = if (index == select)
+                                    MaterialTheme.colorScheme.primary
+                                    else
+                                    MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
+                    } else null
                 )
             }
         }
+    )
+}
+
+@Composable
+fun ChipItem(
+    text: String,
+    index: Int,
+    isSelected: Boolean,
+    leadIcon: @Composable (() -> Unit)? = null,
+    onClick: (Int) -> Unit,
+) {
+    FilterChip(
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+        onClick = { onClick(index) },
+        label = {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+            )
+        },
+        enabled = true,
+        selected = isSelected,
+        leadingIcon = leadIcon,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+                .copy(alpha = 0.2f),
+            disabledSelectedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                .copy(alpha = 0.5f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                .copy(alpha = 0.4f)
+        ),
+        border = null
     )
 }
 
@@ -154,6 +201,7 @@ fun PreviewChipPanelSelectTypeList() {
             selected = { 1 },
             textChips = listChips.toImmutableList(),
             onClick = {},
+            needIcon = true
         )
     }
 }
