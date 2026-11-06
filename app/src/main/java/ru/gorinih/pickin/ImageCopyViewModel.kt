@@ -237,7 +237,7 @@ class ImageCopyViewModel(
                             println("HTML length: ${page.html.length}")
                             println("HTML: ${page.html.take(300)}")
                             // Передаём HTML в парсер.
-                            storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
+                           // storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
 
                             val postJson =
                                 parser.parsePost(url = imageCopyState.url, html = page.html)
