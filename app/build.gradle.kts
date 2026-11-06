@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "ru.gorinih.instaimagecopy"
+    namespace = "ru.gorinih.pickin"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "ru.gorinih.instaimagecopy"
+        applicationId = "ru.gorinih.pickin"
         minSdk = 33
         targetSdk = 37
         versionCode = 1

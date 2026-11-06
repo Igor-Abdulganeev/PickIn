@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">InstaImageCopy</string>
+    <string name="app_name">PickIn</string>
     <string name="button_text_waiting_auto">Загрузить публикацию</string>
     <string name="button_text_waiting_manual">Обработать публикацию</string>
     <string name="button_text_download_post">Загрузка страницы</string>

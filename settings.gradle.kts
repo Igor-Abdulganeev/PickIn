@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "InstaImageCopy"
+rootProject.name = "PickIn"
 include(":app")

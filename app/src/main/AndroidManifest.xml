@@ -13,11 +13,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.InstaImageCopy">
+        android:theme="@style/Theme.PickIn">
         <activity
             android:name=".ImageCopyActivity"
             android:exported="true"
-            android:theme="@style/Theme.InstaImageCopy"
+            android:theme="@style/Theme.PickIn"
             android:launchMode="singleInstance"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
