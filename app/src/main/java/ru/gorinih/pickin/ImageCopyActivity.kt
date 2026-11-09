@@ -1,6 +1,7 @@
 package ru.gorinih.pickin
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -17,15 +18,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,23 +37,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.first
 import org.koin.compose.viewmodel.koinViewModel
+import ru.gorinih.pickin.ui.models.EventImageCopy
 import ru.gorinih.pickin.ui.models.ImagePreview
 import ru.gorinih.pickin.ui.models.LocalImagePreview
-import ru.gorinih.pickin.ui.models.ScreenBlocks
-import ru.gorinih.pickin.ui.screens.EnterUrlScreen
-import ru.gorinih.pickin.ui.screens.HelpScreen
-import ru.gorinih.pickin.ui.screens.PreviewScreen
-import ru.gorinih.pickin.ui.screens.SettingsScreen
-import ru.gorinih.pickin.ui.views.ElevateButton
+import ru.gorinih.pickin.ui.screens.LandscapeActivityScreen
+import ru.gorinih.pickin.ui.screens.PortraitActivityScreen
 import ru.gorinih.pickin.ui.theme.PickInTheme
 
 class ImageCopyActivity : ComponentActivity() {
@@ -72,6 +65,8 @@ class ImageCopyActivity : ComponentActivity() {
             PickInTheme {
                 val viewModel: ImageCopyViewModel = koinViewModel()
                 val imageCopyState = viewModel.imageCopyState
+                val configuration = LocalConfiguration.current
+                val orientationLandscape: Boolean = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
                 var selectedPreviewUrl by rememberSaveable { mutableStateOf("") }
                 var transitionPreviewUrl by remember { mutableStateOf<String?>(null) }
                 var closingPreviewUrl by remember { mutableStateOf<String?>(null) }
@@ -93,7 +88,9 @@ class ImageCopyActivity : ComponentActivity() {
 
                 LaunchedEffect(incomingIntentUriState.value) {
                     incomingIntentUriState.value?.let {
-                        viewModel.onChangeUrl(it, true)
+                        viewModel.onEvent(
+                            EventImageCopy.OnChangeUrl(newUrl = it, startIfPossibly = true)
+                        )
                         incomingIntentUriState.value = null
                     }
                 }
@@ -170,8 +167,6 @@ class ImageCopyActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .padding(innerPadding)
                                 ) {
-
-                                    Column(modifier = Modifier.fillMaxSize()) {
 /*
                         InstagramScreen(
                             saveHtml = {html ->
@@ -179,82 +174,22 @@ class ImageCopyActivity : ComponentActivity() {
                             }
                         )
 */
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp),
-                                            horizontalArrangement = Arrangement.SpaceAround
-                                        ) {
-                                            ElevateButton(
-                                                text = { Text(text = stringResource(R.string.button_text_settings)) },
-                                                onSavedClick = {
-                                                    viewModel.rotateVisibilitySettings()
-                                                },
-                                            )
-                                            ElevateButton(
-                                                text = { Text(text = stringResource(R.string.button_text_help)) },
-                                                onSavedClick = {
-                                                    viewModel.rotateVisibilityHelp()
-                                                }
-                                            )
-                                        }
-                                        if (imageCopyState.blocks[ScreenBlocks.INPUT] == true)
-                                            EnterUrlScreen(
-                                                url = { imageCopyState.url },
-                                                job = { imageCopyState.job },
-                                                result = { imageCopyState.result },
-                                                typeDownload = { imageCopyState.selectedTypeDownload },
-                                                onChangeUrl = { newUrl ->
-                                                    viewModel.onChangeUrl(
-                                                        newUrl = newUrl
-                                                    )
-                                                },
-                                                onDownloadUrl = { viewModel.getPostData() },
-                                                onClear = { viewModel.clear() }
-                                            )
-                                        AnimatedVisibility(
-                                            visible = imageCopyState.blocks[ScreenBlocks.HELP] == true
-                                        ) {
-                                            HelpScreen()
-                                        }
-                                        AnimatedVisibility(
-                                            visible = imageCopyState.blocks[ScreenBlocks.SETTINGS] == true
-                                        ) {
-                                            SettingsScreen(
-                                                selectedDownloadType = { imageCopyState.selectedTypeDownload },
-                                                selectedMediaType = { imageCopyState.selectedMediaDownload },
-                                                selectedAutoComplete = { imageCopyState.selectedAutoComplete },
-                                                onClickDownloadType = {
-                                                    viewModel.onChangeTypeDownload(it)
-                                                },
-                                                onClickMediaType = {
-                                                    viewModel.onChangeMediaDownload(it)
-                                                },
-                                                onClickAutoComplete = {
-                                                    viewModel.onChangeAutoComplete(it)
-                                                }
-                                            )
-                                        }
-                                        AnimatedVisibility(
-                                            visible = imageCopyState.blocks[ScreenBlocks.PREVIEW] == true
-                                        ) {
-                                            PreviewScreen(
-                                                job = { imageCopyState.job },
-                                                listMedia = imageCopyState.listMedia.toImmutableList(),
-                                                onStartDownload = {
-                                                    viewModel.getSelectedData()
-                                                },
-                                                onClickMedia = {
-                                                    viewModel.selectData(it)
-                                                }
-                                            )
-                                        }
-                                    }
 
+                                    when (orientationLandscape) {
+                                        true -> LandscapeActivityScreen(
+                                            imageCopyState = imageCopyState,
+                                            event = viewModel::onEvent
+                                        )
+
+                                        false -> PortraitActivityScreen(
+                                            imageCopyState = imageCopyState,
+                                            event = viewModel::onEvent
+                                        )
+                                    }
                                     AnimatedVisibility(
                                         visibleState = previewVisibilityState,
-                                        enter = fadeIn(tween(200)),
-                                        exit = fadeOut(tween(200)),
+                                        enter = fadeIn(tween(150)),
+                                        exit = fadeOut(tween(150)),
                                         label = "ImagePreviewScope",
                                         modifier = Modifier.fillMaxSize()
                                     ) {
@@ -279,6 +214,7 @@ class ImageCopyActivity : ComponentActivity() {
                                                 ),
                                             contentAlignment = Alignment.Center
                                         ) {
+                                            val shareModifier = if (orientationLandscape) Modifier.fillMaxHeight(0.9f) else Modifier.fillMaxWidth(0.9f)
                                             AsyncImage(
                                                 model = ImageRequest.Builder(context)
                                                     .data(imageUrl)
@@ -286,8 +222,8 @@ class ImageCopyActivity : ComponentActivity() {
                                                     .crossfade(false)
                                                     .build(),
                                                 contentDescription = null,
-                                                contentScale = ContentScale.FillWidth,
-                                                modifier = Modifier
+                                                contentScale = if(orientationLandscape) ContentScale.FillHeight else ContentScale.FillWidth,
+                                                modifier = shareModifier
                                                     .sharedElement(
                                                         sharedContentState = rememberSharedContentState(
                                                             imageUrl
@@ -295,7 +231,6 @@ class ImageCopyActivity : ComponentActivity() {
                                                         animatedVisibilityScope = overlayVisibilityScope,
                                                         boundsTransform = { _, _ -> spring(stiffness = Spring.StiffnessLow) }
                                                     )
-                                                    .fillMaxWidth(0.9f)
                                             )
                                         }
                                     }

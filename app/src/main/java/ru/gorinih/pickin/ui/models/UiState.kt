@@ -1,6 +1,7 @@
 package ru.gorinih.pickin.ui.models
 
 import androidx.compose.runtime.Stable
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.toPersistentMap
 
@@ -21,5 +22,6 @@ data class UiState (
     val selectedMediaDownload: MediaDownload = MediaDownload.NONE,
     val selectedAutoComplete: Boolean = false,
     @Stable
-    val listMedia: List<MediaItem> = emptyList()
+    val listMedia: List<MediaItem> = emptyList(),
+    val selectedList: ImmutableList<String>
 )

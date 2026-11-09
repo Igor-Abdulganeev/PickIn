@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ import ru.gorinih.pickin.data.remote.WebLoader
 import ru.gorinih.pickin.data.remote.models.NetworkResult
 import ru.gorinih.pickin.data.storage.DataStoreRepository
 import ru.gorinih.pickin.data.storage.InstagramStorage
+import ru.gorinih.pickin.ui.models.EventImageCopy
 import ru.gorinih.pickin.ui.models.MediaDownload
 import ru.gorinih.pickin.ui.models.MediaItem
 import ru.gorinih.pickin.ui.models.ResultMessage
@@ -44,7 +46,8 @@ class ImageCopyViewModel(
 
     var imageCopyState by mutableStateOf(
         UiState(
-            result = ResultMessage(R.string.result_message_start, TypeResult.DONE)
+            result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
+            selectedList = emptyList<String>().toImmutableList()
         )
     )
         private set
@@ -93,9 +96,29 @@ class ImageCopyViewModel(
         }
     }
 
-    fun onChangeUrl(newUrl: String, startIfPossibly: Boolean = false) {
-        if (startIfPossibly) clear(newUrl) else
-        imageCopyState = imageCopyState.copy(url = newUrl)
+    fun onEvent(event: EventImageCopy) {
+        when(event) {
+            is EventImageCopy.OnChangeUrl -> onChangeUrl(event.newUrl, event.startIfPossibly)
+            is EventImageCopy.OnChangeTypeDownload -> onChangeTypeDownload(event.index)
+            is EventImageCopy.OnChangeMediaDownload -> onChangeMediaDownload(event.index)
+            is EventImageCopy.OnChangeAutoComplete -> onChangeAutoComplete(event.value)
+            is EventImageCopy.SelectData -> selectData(event.previewUrl)
+            is EventImageCopy.ClearData -> clear(event.url)
+            is EventImageCopy.GetPostData -> getPostData()
+            is EventImageCopy.GetSelectedData -> getSelectedData()
+            is EventImageCopy.RotateVisibilitySettings -> rotateVisibilitySettings()
+            is EventImageCopy.RotateVisibilityHelp -> rotateVisibilityHelp()
+            is EventImageCopy.RotateVisibilityPreview -> rotateVisibilityPreview()
+        }
+    }
+
+    private fun onChangeUrl(newUrl: String, startIfPossibly: Boolean) {
+
+        if (startIfPossibly) {
+            clear(newUrl)
+        } else {
+            imageCopyState = imageCopyState.copy(url = newUrl)
+        }
         viewModelScope.launch {
             /**
              * задержка нужно прочитать текущие настройки
@@ -108,7 +131,7 @@ class ImageCopyViewModel(
         }
     }
 
-    fun onChangeTypeDownload(index: Int) {
+    private fun onChangeTypeDownload(index: Int) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 TypeDownload.entries.firstOrNull { it.index == index }?.let { type ->
@@ -121,7 +144,7 @@ class ImageCopyViewModel(
         }
     }
 
-    fun onChangeMediaDownload(index: Int) {
+    private fun onChangeMediaDownload(index: Int) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 MediaDownload.entries.firstOrNull { it.index == index }?.let { media ->
@@ -134,7 +157,7 @@ class ImageCopyViewModel(
         }
     }
 
-    fun onChangeAutoComplete(value: Boolean) {
+    private fun onChangeAutoComplete(value: Boolean) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 dataStore.saveKeyAutoComplete(value)
@@ -145,26 +168,29 @@ class ImageCopyViewModel(
         }
     }
 
-    fun rotateVisibilitySettings() {
+    private fun rotateVisibilitySettings() {
         rotateVisibilityScreen(ScreenBlocks.SETTINGS)
     }
 
-    fun rotateVisibilityPreview() {
+    private fun rotateVisibilityPreview() {
         rotateVisibilityScreen(ScreenBlocks.PREVIEW)
     }
 
-    fun rotateVisibilityHelp() {
+    private fun rotateVisibilityHelp() {
         rotateVisibilityScreen(ScreenBlocks.HELP)
     }
 
-    fun selectData(previewUrl: String) {
+    private fun selectData(previewUrl: String) {
         when (selectedData.contains(previewUrl)) {
             true -> selectedData.remove(previewUrl)
             false -> selectedData.add(previewUrl)
         }
+        imageCopyState = imageCopyState.copy(
+            selectedList = selectedData.toImmutableList()
+        )
     }
 
-    fun clear(url: String = "") {
+    private fun clear(url: String) {
         mediaData.clear()
         selectedData.clear()
         imageCopyState = imageCopyState.copy(
@@ -175,7 +201,7 @@ class ImageCopyViewModel(
         )
     }
 
-    fun getSelectedData() {
+    private fun getSelectedData() {
         viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
             val listOfMedia: List<String> =
                 mediaData.filter { it.previewUrl in selectedData }.map { it.mediaUrl }
@@ -184,7 +210,7 @@ class ImageCopyViewModel(
         }
     }
 
-    fun getPostData() {
+    private fun getPostData() {
         if (imageCopyState.url.isNotBlank()) {
             imageCopyState =
                 imageCopyState.copy(

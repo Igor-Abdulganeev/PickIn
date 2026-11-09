@@ -51,6 +51,7 @@ fun EnterUrlScreen(
             onValueChange = onChangeUrl,
             label = { Text(text = stringResource(R.string.edit_text_label)) },
             shape = RoundedCornerShape(size = 10.dp),
+            maxLines = 2,
         )
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceAround) {

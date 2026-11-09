@@ -35,11 +35,12 @@ import ru.gorinih.pickin.ui.views.ItemMediaCard
 fun PreviewScreen(
     listMedia: ImmutableList<MediaItem>,
     job: () -> StatusJob,
+    selectedList: () -> ImmutableList<String>,
     onStartDownload: () -> Unit,
     onClickMedia: (String) -> Unit
 ) {
     val listPreviewState = rememberLazyGridState()
-    val selectedMedia = rememberSaveable { mutableStateListOf<String>() }
+    val selectedMedia = selectedList()
 
     if (listMedia.isNotEmpty()) {
         Column(
@@ -74,10 +75,6 @@ fun PreviewScreen(
                         media = item,
                         isSelected = selectedMedia.contains(item.previewUrl),
                         onClick = { previewUrl ->
-                            when (selectedMedia.contains(previewUrl)) {
-                                true -> selectedMedia.remove(previewUrl)
-                                false -> selectedMedia.add(previewUrl)
-                            }
                             onClickMedia(previewUrl)
                         }
                     )
