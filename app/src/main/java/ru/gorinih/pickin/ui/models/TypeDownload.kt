@@ -7,5 +7,4 @@ package ru.gorinih.pickin.ui.models
 enum class TypeDownload(val index: Int) {
     AUTO(index = 0),
     MANUAL(index = 1),
-    NONE(index = 100)
 }

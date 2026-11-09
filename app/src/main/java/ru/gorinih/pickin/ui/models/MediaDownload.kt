@@ -8,5 +8,4 @@ enum class MediaDownload(val index: Int) {
     ALL(index = 0),
     IMAGE(index = 1),
     VIDEO(index = 2),
-    NONE(index = 100)
 }

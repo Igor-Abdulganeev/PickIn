@@ -25,7 +25,7 @@ class DataStoreRepositoryImpl(
 
     override fun loadTypeDownload(): Flow<Int> =
         dataStore.data.map { pref ->
-            pref[intPreferencesKey(TYPE_DOWNLOAD)] ?: 100
+            pref[intPreferencesKey(TYPE_DOWNLOAD)] ?: 1
         }
 
     override suspend fun saveMediaDownload(value: MediaDownload) {
@@ -36,7 +36,7 @@ class DataStoreRepositoryImpl(
 
     override fun loadMediaDownload(): Flow<Int> =
         dataStore.data.map { pref ->
-            pref[intPreferencesKey(MEDIA_DOWNLOAD)] ?: 100
+            pref[intPreferencesKey(MEDIA_DOWNLOAD)] ?: 0
         }
 
     override suspend fun saveKeyAutoComplete(value: Boolean) {

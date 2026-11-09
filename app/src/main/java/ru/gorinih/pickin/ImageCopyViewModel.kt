@@ -75,7 +75,7 @@ class ImageCopyViewModel(
                 .onEach { value ->
                     imageCopyState = imageCopyState.copy(
                         selectedTypeDownload = TypeDownload.entries.firstOrNull { it.index == value }
-                            ?: TypeDownload.NONE
+                            ?: TypeDownload.MANUAL
                     )
                 }.stateIn(viewModelScope)
             dataStore.loadMediaDownload()
@@ -83,7 +83,7 @@ class ImageCopyViewModel(
                 .onEach { value ->
                     imageCopyState = imageCopyState.copy(
                         selectedMediaDownload = MediaDownload.entries.firstOrNull { it.index == value }
-                            ?: MediaDownload.NONE
+                            ?: MediaDownload.ALL
                     )
                 }.stateIn(viewModelScope)
             dataStore.loadKeyAutoComplete()
@@ -317,15 +317,6 @@ class ImageCopyViewModel(
                                                 )
                                             )
                                         }
-
-                                        TypeDownload.NONE -> {
-                                            imageCopyState = imageCopyState.copy(
-                                                result = ResultMessage(
-                                                    R.string.result_message_unknown_error,
-                                                    TypeResult.ERROR
-                                                )
-                                            )
-                                        }
                                     }
                                 }
                             }
@@ -370,7 +361,6 @@ class ImageCopyViewModel(
             MediaDownload.ALL -> mediaData.map { it.mediaUrl }
             MediaDownload.IMAGE -> mediaData.filter { !it.isVideo }.map { it.mediaUrl }
             MediaDownload.VIDEO -> mediaData.filter { it.isVideo }.map { it.mediaUrl }
-            MediaDownload.NONE -> emptyList()
         }
         if (listOfMedia.isNotEmpty())
             getMediaData(listOfMedia)

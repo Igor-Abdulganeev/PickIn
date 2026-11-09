@@ -1,8 +1,15 @@
+import org.jetbrains.kotlin.konan.properties.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
 }
+
+val localProperties = Properties()
+val localPropertiesFile =rootProject.file("local.properties")
+if (localPropertiesFile.exists()) localProperties.load(FileInputStream(localPropertiesFile))
 
 android {
     namespace = "ru.gorinih.pickin"
@@ -20,8 +27,49 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("prod") {
+            val path = localProperties.getProperty("KEYSTORE_PATH") ?:error("Can`t find local properties file")
+            storeFile = file(path)
+            storePassword = localProperties.getProperty("KEYSTORE_PASSWORD") ?: error("Wrong key store password")
+            keyAlias = localProperties.getProperty("KEY_ALIAS") ?: error("Wrong key store alias")
+            keyPassword = localProperties.getProperty("KEY_PASSWORD") ?: error("Wrong key store alias password")
+        }
+    }
+
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+
+            isDebuggable = true
+            isMinifyEnabled = false
+        }
         release {
+            isDebuggable = false
+
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            signingConfig = signingConfigs.getByName("prod")
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+
+            flavorDimensions += "env"
+            productFlavors {
+                create("dev") {
+                    dimension = "env"
+                    applicationIdSuffix = ".test"
+                    versionNameSuffix = "-test"
+                }
+
+                create("prod") {
+                    dimension = "env"
+                }
+            }
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")

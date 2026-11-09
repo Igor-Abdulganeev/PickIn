@@ -18,8 +18,8 @@ data class UiState (
         ScreenBlocks.SETTINGS to false,
         ScreenBlocks.PREVIEW to true
     ).toPersistentMap(),
-    val selectedTypeDownload: TypeDownload = TypeDownload.NONE,
-    val selectedMediaDownload: MediaDownload = MediaDownload.NONE,
+    val selectedTypeDownload: TypeDownload = TypeDownload.MANUAL,
+    val selectedMediaDownload: MediaDownload = MediaDownload.ALL,
     val selectedAutoComplete: Boolean = false,
     @Stable
     val listMedia: List<MediaItem> = emptyList(),
