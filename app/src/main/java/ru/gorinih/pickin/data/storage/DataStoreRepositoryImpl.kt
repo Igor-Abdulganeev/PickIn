@@ -47,7 +47,7 @@ class DataStoreRepositoryImpl(
 
     override fun loadKeyAutoComplete(): Flow<Boolean> =
         dataStore.data.map { pref ->
-            pref[booleanPreferencesKey(KEY_AUTO_COMPLETE)] ?: false
+            pref[booleanPreferencesKey(KEY_AUTO_COMPLETE)] ?: true
         }
 
     companion object {

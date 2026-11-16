@@ -3,11 +3,13 @@ package ru.gorinih.pickin.ui.views
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,10 +23,12 @@ import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -61,6 +65,8 @@ fun ItemMediaCard(
     val isPreviewOpen =
         preview.selectedPreviewUrl == media.previewUrl
 
+    var isLoadImage by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier.border(
             width = 1.dp,
@@ -78,14 +84,29 @@ fun ItemMediaCard(
                 modifier = Modifier.weight(1f),
                 imageVector = if (media.isVideo) Icons.Outlined.EmergencyRecording else Icons.Outlined.Photo,
                 contentDescription = null,
-                tint = if (media.isVideo) Color.Red else Color.Magenta
+                tint = if (media.isVideo) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primary
             )
-            Icon(
-                modifier = Modifier.weight(1f),
-                imageVector = if (isSelected) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                contentDescription = null,
-                tint = if (isSelected) Color(red = 0.8f, green = 0.33f, blue = 0.0f) else Color.Gray
-            )
+            when (isLoadImage) {
+                true -> Icon(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            onClick = {
+                                onClick(media.previewUrl)
+                            }
+                        ),
+                    imageVector = if (isSelected) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = null,
+                    tint = if (isSelected) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                false -> Spacer(
+                    modifier = Modifier
+                        .weight(1f)
+                )
+            }
+
         }
 
         with(preview.sharedTransitionScope) {
@@ -93,13 +114,16 @@ fun ItemMediaCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
+                    .clip(RoundedCornerShape(size = 20.dp))
                     .combinedClickable(
                         enabled = true,
                         onClick = {
-                            onClick(media.previewUrl)
+                            if (isLoadImage)
+                                onClick(media.previewUrl)
                         },
                         onLongClick = {
-                            preview.onLongClick(media.previewUrl)
+                            if (isLoadImage)
+                                preview.onLongClick(media.previewUrl)
                         }
                     )
             ) {
@@ -117,7 +141,13 @@ fun ItemMediaCard(
                             color = MaterialTheme.colorScheme.outlineVariant,
                             shape = RoundedCornerShape(size = 20.dp)
                         )
-                        .clip(RoundedCornerShape(size = 20.dp))
+                        .clip(RoundedCornerShape(size = 20.dp)),
+                    onSuccess = {
+                        isLoadImage = true
+                    },
+                    onError = {
+                        isLoadImage = false
+                    }
                 )
 
                 if (isCurrentPreview) {
@@ -149,40 +179,6 @@ fun ItemMediaCard(
                     )
                 }
             }
-/*
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(media.previewUrl)
-                    .placeholderMemoryCacheKey(media.previewUrl)
-                    .build(),
-                contentDescription = media.author,
-                placeholder = painterResource(R.drawable.instplaceholder),
-                error = painterResource(R.drawable.pht),
-                contentScale = ContentScale.FillWidth,
-                alpha = if (isSelected) 0.5f else 1f,
-                modifier = Modifier
-                    .combinedClickable(
-                        enabled = true,
-                        onClick = {
-                            onClick(media.previewUrl)
-                        },
-                        onLongClick = {
-                            preview.onLongClick(media.previewUrl)
-                        }
-                    )
-                    .sharedElementWithCallerManagedVisibility(
-                        sharedContentState = rememberSharedContentState(media.previewUrl),
-                        visible = preview.selectedPreviewUrl != media.previewUrl
-                    )
-                    .aspectRatio(1f)
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(size = 20.dp)
-                    )
-                    .clip(shape = RoundedCornerShape(size = 20.dp))
-            )
-*/
         }
     }
 }

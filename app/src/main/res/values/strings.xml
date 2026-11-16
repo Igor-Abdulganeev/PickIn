@@ -33,5 +33,26 @@
     <string name="result_message_error_url">Введите корректный адрес</string>
     <string name="result_message_error_time">Запрос не вернул результат за отведенное время</string>
 
-    <string name="help_text">Программа предназначена для скачивания медиа данных из Instagram.\nПоддерживаются открытые посты и рилс.\nЗакрытые посты, статусы, посты с ограничениями по возрасту можно получить только при входе в Instagram, т.к. пока программа не поддерживает (и наверно не будет) ввод логина пользователя (исключительно для безопасности) то и скачать данные таких постов не получится.</string>
+    <string name="help_label_find">Поиск</string>
+    <string name="help_label_count_like">14</string>
+    <string name="help_label_share">Поделиться</string>
+    <string name="help_label_add_history">Добавить в историю</string>
+    <string name="help_label_copy">Копировать ссылку</string>
+    <string name="help_label_cancel">Отмена</string>
+    <string name="help_label_edit">Копировать</string>
+    <string name="help_label_url">https://www.instagram.com/p/</string>
+
+    <string name="help_text_one">    Программа предназначена для скачивания медиа данных (картинок и видео) из Instagram.\n
+        Данная программа не является VPN и не содержит инструменты обхода ограничений, если у Вас наложены ограничения на Instagram, используйте сторонний сервис VPN для работы приложения.\n
+        Поддерживаются открытые посты и рилс. Закрытые посты, статусы, посты с ограничениями по возрасту можно получить только при входе в Instagram.
+        В этой версии авторизация в Instagram не поддерживается, скачать такие данные не получится.\n
+        Для скачивания поста необходимо внести его ссылку в поле ввода, впучную, скопировав или поделившись в Instagram:</string>
+    <string name="help_text_two"> В настройках можно выбрать автоматический старт скачивания медиа при вставке ссылки либо ручной выбор с предпросмотром.\n
+        Долгое нажатие на картинку предпросмотра - увеличивает ее, короткое - выделяет/снимает выделение.\n
+        Тип медиа данных отображается над картинкой</string>
+    <string name="about_code_description">"Исходный код доступен на "</string>
+    <string name="about_code_url">https://github.com/Igor-Abdulganeev/PickIn</string>
+    <string name="about_code_name">GitHub</string>
+    <string name="about_copyright">© 2026 GorInIh. Все права защищены.</string>
+
 </resources>

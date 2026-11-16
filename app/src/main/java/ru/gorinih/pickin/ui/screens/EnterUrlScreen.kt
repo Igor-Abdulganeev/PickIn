@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -53,9 +54,13 @@ fun EnterUrlScreen(
             shape = RoundedCornerShape(size = 10.dp),
             maxLines = 2,
         )
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceAround) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             ElevateButton(
+                modifier = Modifier.fillMaxWidth().weight(0.65f).padding(end = 8.dp),
                 onSavedClick = { onDownloadUrl() },
                 enabled = currentJob == StatusJob.WAITING_JOB,
                 text = {
@@ -71,16 +76,21 @@ fun EnterUrlScreen(
                                 StatusJob.DOWNLOAD_MEDIA -> R.string.button_text_download_media
                                 StatusJob.RESEARCH -> R.string.button_text_research
                             }
-                        )
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             )
             ElevateButton(
+                modifier = Modifier.fillMaxWidth().weight(0.35f).padding(start = 8.dp),
                 onSavedClick = onClear,
                 enabled = currentJob == StatusJob.WAITING_JOB,
                 text = {
                     Text(
-                        text = stringResource(R.string.button_text_clear)
+                        text = stringResource(R.string.button_text_clear),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             )

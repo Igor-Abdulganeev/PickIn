@@ -11,6 +11,9 @@ val localProperties = Properties()
 val localPropertiesFile =rootProject.file("local.properties")
 if (localPropertiesFile.exists()) localProperties.load(FileInputStream(localPropertiesFile))
 
+val vCode = libs.versions.version.code.get().toInt() ?: 8
+val vName = libs.versions.version.name.get() ?: "3"
+
 android {
     namespace = "ru.gorinih.pickin"
     compileSdk {
@@ -21,9 +24,8 @@ android {
         applicationId = "ru.gorinih.pickin"
         minSdk = 33
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
-
+        versionCode = vCode
+        versionName = vName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -76,12 +78,52 @@ android {
             }
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val appName = "pickin"
+        val buildType = variant.buildType
+        val flavor = variant.flavorName
+        val fileName = buildString {
+            append(appName)
+            append("-")
+            append(buildType)
+            append("_")
+            append("$vName.$vCode")
+
+            if (!flavor.isNullOrEmpty() && flavor != "prod") {
+                append("-")
+                append(flavor)
+            }
+            append(".apk")
+        }
+println("FileName === $fileName")
+        val variantName =
+            "${flavor?.replaceFirstChar { it.uppercaseChar() }}${buildType?.replaceFirstChar { it.uppercaseChar() }}"
+        tasks.register("assemble${variantName}Apk") {
+            description = ""
+            dependsOn("assemble${variantName}")
+            doLast {
+                val apkDir =
+                    layout.buildDirectory.dir("outputs/apk/${flavor}/${buildType}").get().asFile
+
+                apkDir.listFiles()?.forEach { file ->
+                    if (file.extension == "apk") {
+                        val renamedFile = File(file.parent, fileName)
+                        file.renameTo(renamedFile)
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -1,4 +1,6 @@
 [versions]
+version-code="21"
+version-name="1.0"
 agp = "9.4.1"
 coreKtx = "1.19.1"
 junit = "4.13.2"

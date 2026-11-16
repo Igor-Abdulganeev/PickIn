@@ -144,10 +144,6 @@ fun ChipPanelSelectTypeList(
                             Icon(
                                 imageVector = Icons.Default.Bolt,
                                 contentDescription = null,
-                                tint = if (index == select)
-                                    MaterialTheme.colorScheme.primary
-                                    else
-                                    MaterialTheme.colorScheme.outlineVariant
                             )
                         }
                     } else null
@@ -178,15 +174,14 @@ fun ChipItem(
         selected = isSelected,
         leadingIcon = leadIcon,
         colors = FilterChipDefaults.filterChipColors(
-            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-                .copy(alpha = 0.2f),
-            disabledSelectedContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                .copy(alpha = 0.5f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                .copy(alpha = 0.4f)
+            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+
         ),
         border = null
     )

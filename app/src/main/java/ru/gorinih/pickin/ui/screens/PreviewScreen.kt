@@ -14,8 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -75,7 +73,8 @@ fun PreviewScreen(
                         media = item,
                         isSelected = selectedMedia.contains(item.previewUrl),
                         onClick = { previewUrl ->
-                            onClickMedia(previewUrl)
+                            if (job() == StatusJob.WAITING_JOB)
+                                onClickMedia(previewUrl)
                         }
                     )
                 }
