@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.SigningConfig
 import org.jetbrains.kotlin.konan.properties.Properties
 import java.io.FileInputStream
 
@@ -8,11 +9,22 @@ plugins {
 }
 
 val localProperties = Properties()
-val localPropertiesFile =rootProject.file("local.properties")
+val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) localProperties.load(FileInputStream(localPropertiesFile))
 
 val vCode = libs.versions.version.code.get().toInt() ?: 8
 val vName = libs.versions.version.name.get() ?: "3"
+
+fun SigningConfig.loadFromPreference(prefix: String) {
+    val path = localProperties.getProperty("${prefix}_PATH")
+        ?: error("Can`t find local properties file")
+    storeFile = file(path)
+    storePassword = localProperties.getProperty("${prefix}_PASSWORD")
+        ?: error("Wrong key store password")
+    keyAlias = localProperties.getProperty("${prefix}_ALIAS") ?: error("Wrong key store alias")
+    keyPassword = localProperties.getProperty("${prefix}_ALIAS_PASSWORD")
+        ?: error("Wrong key store alias password")
+}
 
 android {
     namespace = "ru.gorinih.pickin"
@@ -30,12 +42,11 @@ android {
     }
 
     signingConfigs {
-        create("prod") {
-            val path = localProperties.getProperty("KEYSTORE_PATH") ?:error("Can`t find local properties file")
-            storeFile = file(path)
-            storePassword = localProperties.getProperty("KEYSTORE_PASSWORD") ?: error("Wrong key store password")
-            keyAlias = localProperties.getProperty("KEY_ALIAS") ?: error("Wrong key store alias")
-            keyPassword = localProperties.getProperty("KEY_PASSWORD") ?: error("Wrong key store alias password")
+        create("liteProd") {
+            loadFromPreference("KEYSTORE_LITE")
+        }
+        create("proProd") {
+            loadFromPreference("KEYSTORE_PRO")
         }
     }
 
@@ -53,30 +64,42 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
 
-            signingConfig = signingConfigs.getByName("prod")
-
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
 
-            flavorDimensions += "env"
-            productFlavors {
-                create("dev") {
-                    dimension = "env"
-                    applicationIdSuffix = ".test"
-                    versionNameSuffix = "-test"
-                }
-
-                create("prod") {
-                    dimension = "env"
-                }
-            }
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
         }
+
+        flavorDimensions += listOf("env", "tier")
+        productFlavors {
+            create("dev") {
+                dimension = "env"
+                applicationIdSuffix = ".test"
+                versionNameSuffix = "-test"
+            }
+
+            create("prod") {
+                dimension = "env"
+            }
+
+            create("lite") {
+                dimension = "tier"
+                signingConfig = signingConfigs.getByName("liteProd")
+            }
+
+            create("pro") {
+                dimension = "tier"
+                applicationIdSuffix = ".pro"
+                versionNameSuffix = "-pro"
+                signingConfig = signingConfigs.getByName("proProd")
+            }
+        }
+
     }
 
     compileOptions {
@@ -106,7 +129,7 @@ androidComponents {
             }
             append(".apk")
         }
-println("FileName === $fileName")
+        println("FileName === $fileName")
         val variantName =
             "${flavor?.replaceFirstChar { it.uppercaseChar() }}${buildType?.replaceFirstChar { it.uppercaseChar() }}"
         tasks.register("assemble${variantName}Apk") {
@@ -125,6 +148,19 @@ println("FileName === $fileName")
             }
         }
     }
+
+    beforeVariants { variantBuilder ->
+        val allowedVariants = setOf(
+            "devLiteDebug",
+            "devProDebug",
+            "prodLiteRelease",
+            "prodProRelease"
+        )
+        if (variantBuilder.name !in allowedVariants) {
+            variantBuilder.enable = false
+        }
+    }
+
 }
 
 dependencies {
