@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import ru.gorinih.pickin.R
@@ -59,6 +61,15 @@ fun PreviewScreen(
                     .padding(vertical = 8.dp, horizontal = 8.dp),
                 enabled = selectedMedia.isNotEmpty() && job() == StatusJob.WAITING_JOB,
                 onSavedClick = onStartDownload
+            )
+            Text(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                text = stringResource(R.string.count_selected_label, "${selectedMedia.count()}"),
+                style = MaterialTheme.typography.labelMedium
+                    .copy(color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.SemiBold),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             DividerHorizontalTransparent(modifier = Modifier.padding(vertical = 8.dp))
             LazyVerticalGrid(
