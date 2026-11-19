@@ -199,7 +199,8 @@ class ImageCopyViewModel(
             url = url,
             job = StatusJob.WAITING_JOB,
             result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
-            listMedia = emptyList()
+            listMedia = emptyList(),
+            selectedList = emptyList<String>().toImmutableList()
         )
     }
 
@@ -214,12 +215,17 @@ class ImageCopyViewModel(
 
     private fun getPostData() {
         if (imageCopyState.url.isNotBlank()) {
+            mediaData.clear()
+            selectedData.clear()
             imageCopyState =
                 imageCopyState.copy(
-                    job = StatusJob.DOWNLOAD_POST, result = ResultMessage(
+                    job = StatusJob.DOWNLOAD_POST,
+                    result = ResultMessage(
                         R.string.result_message_download_post,
                         TypeResult.DONE
-                    )
+                    ),
+                    listMedia = emptyList(),
+                    selectedList = emptyList<String>().toImmutableList()
                 )
             viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
                 try {
