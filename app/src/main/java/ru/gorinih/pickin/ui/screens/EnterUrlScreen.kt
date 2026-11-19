@@ -53,6 +53,7 @@ fun EnterUrlScreen(
             label = { Text(text = stringResource(R.string.edit_text_label)) },
             shape = RoundedCornerShape(size = 10.dp),
             maxLines = 2,
+            textStyle = MaterialTheme.typography.bodyMedium
         )
         Row(
             modifier = Modifier.fillMaxWidth()

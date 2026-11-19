@@ -21,6 +21,8 @@ import ru.gorinih.pickin.ui.models.ScreenBlocks
 import ru.gorinih.pickin.ui.models.TypeResult
 import ru.gorinih.pickin.ui.models.UiState
 import ru.gorinih.pickin.ui.theme.PickInTheme
+import ru.gorinih.pickin.ui.views.ChipItem
+import ru.gorinih.pickin.ui.views.ChipPanelSelectTypeList
 import ru.gorinih.pickin.ui.views.ElevateButton
 
 /**
@@ -39,15 +41,29 @@ fun PortraitActivityScreen(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            ElevateButton(
-                text = { Text(text = stringResource(R.string.button_text_settings)) },
-                onSavedClick = {
+            ChipItem(
+                text = stringResource(R.string.button_text_settings),
+                index = 0,
+                isSelected = imageCopyState.blocks[ScreenBlocks.SETTINGS] == true,
+                leadIcon = null,
+                onClick = {
+                    if (
+                        imageCopyState.blocks[ScreenBlocks.HELP] == true &&
+                        imageCopyState.blocks[ScreenBlocks.SETTINGS] == false
+                    ) event(EventImageCopy.RotateVisibilityHelp)
                     event(EventImageCopy.RotateVisibilitySettings)
-                },
+                }
             )
-            ElevateButton(
-                text = { Text(text = stringResource(R.string.button_text_help)) },
-                onSavedClick = {
+            ChipItem(
+                text = stringResource(R.string.button_text_help),
+                index = 1,
+                isSelected = imageCopyState.blocks[ScreenBlocks.HELP] == true,
+                leadIcon = null,
+                onClick = {
+                    if (
+                        imageCopyState.blocks[ScreenBlocks.SETTINGS] == true &&
+                        imageCopyState.blocks[ScreenBlocks.HELP] == false
+                    ) event(EventImageCopy.RotateVisibilitySettings)
                     event(EventImageCopy.RotateVisibilityHelp)
                 }
             )

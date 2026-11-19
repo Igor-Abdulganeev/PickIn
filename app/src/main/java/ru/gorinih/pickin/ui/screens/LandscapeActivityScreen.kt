@@ -17,7 +17,7 @@ import ru.gorinih.pickin.R
 import ru.gorinih.pickin.ui.models.EventImageCopy
 import ru.gorinih.pickin.ui.models.ScreenBlocks
 import ru.gorinih.pickin.ui.models.UiState
-import ru.gorinih.pickin.ui.views.ElevateButton
+import ru.gorinih.pickin.ui.views.ChipItem
 
 /**
  * Created by Igor Abdulganeev on 06.11.2026
@@ -34,24 +34,40 @@ fun LandscapeActivityScreen(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                ElevateButton(
-                    text = { Text(text = stringResource(R.string.button_text_settings)) },
-                    onSavedClick = {
+                ChipItem(
+                    text = stringResource(R.string.button_text_settings),
+                    index = 0,
+                    isSelected = imageCopyState.blocks[ScreenBlocks.SETTINGS] == true,
+                    leadIcon = null,
+                    onClick = {
+                        if (
+                            imageCopyState.blocks[ScreenBlocks.HELP] == true &&
+                            imageCopyState.blocks[ScreenBlocks.SETTINGS] == false
+                        ) event(EventImageCopy.RotateVisibilityHelp)
                         event(EventImageCopy.RotateVisibilitySettings)
-                    },
+                    }
                 )
-                ElevateButton(
-                    text = { Text(text = stringResource(R.string.button_text_help)) },
-                    onSavedClick = {
+                ChipItem(
+                    text = stringResource(R.string.button_text_help),
+                    index = 1,
+                    isSelected = imageCopyState.blocks[ScreenBlocks.HELP] == true,
+                    leadIcon = null,
+                    onClick = {
+                        if (
+                            imageCopyState.blocks[ScreenBlocks.SETTINGS] == true &&
+                            imageCopyState.blocks[ScreenBlocks.HELP] == false
+                        ) event(EventImageCopy.RotateVisibilitySettings)
                         event(EventImageCopy.RotateVisibilityHelp)
                     }
                 )
@@ -92,9 +108,11 @@ fun LandscapeActivityScreen(
                 )
             }
         }
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             AnimatedVisibility(
                 visible = imageCopyState.blocks[ScreenBlocks.PREVIEW] == true,
             ) {
