@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">PickIn Pro</string>
+    <string name="header_auth_label">Авторизация в Instagram:</string>
+    <string name="text_auth_done">Авторизация выполнена</string>
+    <string name="text_auth_cancel">Авторизация отсутствует</string>
+    <string name="list_auth_first">обновить</string>
+    <string name="list_auth_second">отменить</string>
 
 </resources>

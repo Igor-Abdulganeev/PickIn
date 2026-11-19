@@ -3,10 +3,8 @@ package ru.gorinih.pickin.di
 import coil3.ImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
-import io.ktor.client.HttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
-import ru.gorinih.pickin.data.remote.HttpClientFactory
 import ru.gorinih.pickin.data.remote.WebLoader
 
 /**
@@ -14,10 +12,6 @@ import ru.gorinih.pickin.data.remote.WebLoader
  */
 
 val networkModule = module {
-    single<HttpClient>{
-        HttpClientFactory.create(false)
-    }
-
     single<WebLoader> {
         WebLoader(httpClient = get())
     }

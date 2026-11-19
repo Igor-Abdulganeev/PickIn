@@ -5,7 +5,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import ru.gorinih.pickin.ui.models.MediaDownload
 import ru.gorinih.pickin.ui.models.TypeDownload
@@ -50,9 +52,24 @@ class DataStoreRepositoryImpl(
             pref[booleanPreferencesKey(KEY_AUTO_COMPLETE)] ?: true
         }
 
+    override suspend fun saveSession(value: String?) {
+        dataStore.edit { pref ->
+            when(value) {
+                null -> pref.remove(stringPreferencesKey(KEY_SESSION_INST))
+                else -> pref[stringPreferencesKey(KEY_SESSION_INST)] = value
+            }
+        }
+    }
+
+    override suspend fun restoreSession(): String? =
+        dataStore.data.map { pref ->
+            pref[stringPreferencesKey(KEY_SESSION_INST)]
+        }.firstOrNull()
+
     companion object {
         private const val TYPE_DOWNLOAD = "instagram.type.download"
         private const val MEDIA_DOWNLOAD = "instagram.media.download"
         private const val KEY_AUTO_COMPLETE = "instagram.auto.complete"
+        private const val KEY_SESSION_INST = "instagram.session.inst"
     }
 }

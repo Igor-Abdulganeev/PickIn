@@ -8,6 +8,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import ru.gorinih.pickin.di.appModule
 import ru.gorinih.pickin.di.networkModule
+import ru.gorinih.pickin.di.tierModule
 
 /**
  * Created by Igor Abdulganeev on 20.10.2026
@@ -21,7 +22,8 @@ class ImageCopyApplication: Application() {
             androidContext(this@ImageCopyApplication)
             modules(
                 appModule,
-                networkModule
+                tierModule,
+                networkModule,
             )
         }
 

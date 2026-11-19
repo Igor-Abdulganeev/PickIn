@@ -12,7 +12,7 @@ import ru.gorinih.pickin.ui.models.TypeDownload
  * Created by Igor Abdulganeev on 29.10.2026
  */
 
-const val SETTINGS_DATA_STORE = "instagram.settings.data.store.preferences_pb"
+const val SETTINGS_DATA_STORE = "instagram.pickin.settings.data.store.preferences_pb"
 
 fun createDataStore(context: Context): DataStore<Preferences> =
     PreferenceDataStoreFactory.create {
@@ -26,4 +26,6 @@ interface DataStoreRepository {
     fun loadMediaDownload(): Flow<Int>
     suspend fun saveKeyAutoComplete(value: Boolean)
     fun loadKeyAutoComplete(): Flow<Boolean>
+    suspend fun saveSession(value: String?)
+    suspend fun restoreSession(): String?
 }

@@ -1,6 +1,5 @@
 package ru.gorinih.pickin
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,6 +19,7 @@ import ru.gorinih.pickin.data.parsers.models.CarouselSearchResult
 import ru.gorinih.pickin.data.remote.WebLoader
 import ru.gorinih.pickin.data.remote.models.NetworkResult
 import ru.gorinih.pickin.data.storage.DataStoreRepository
+import ru.gorinih.pickin.data.storage.InstagramSessionManager
 import ru.gorinih.pickin.data.storage.InstagramStorage
 import ru.gorinih.pickin.ui.models.EventImageCopy
 import ru.gorinih.pickin.ui.models.MediaDownload
@@ -41,7 +41,8 @@ class ImageCopyViewModel(
     private val webLoader: WebLoader,
     private val parser: InstagramHtmlParser,
     private val storage: InstagramStorage,
-    private val dataStore: DataStoreRepository
+    private val dataStore: DataStoreRepository,
+    private val session: InstagramSessionManager
 ) : ViewModel() {
 
     var imageCopyState by mutableStateOf(
@@ -56,7 +57,7 @@ class ImageCopyViewModel(
         CoroutineExceptionHandler { _, throwable ->
             when (throwable) {
                 is CancellationException -> throw throwable
-                else -> println("Глобальная корутина $throwable")
+                else -> println("Error coroutine $throwable")
             }
         }
     private val mediaData: MutableList<MediaItem> = mutableListOf()
@@ -64,12 +65,13 @@ class ImageCopyViewModel(
 
     fun sHtml(html: String) {
         val file = storage.saveHtmlToFile(html)
-        Log.d("InstagramWeb", "HTML saved: ${file.absolutePath}")
-        Log.d("InstagramWeb", "HTML size: ${file.length()} bytes")
+        println("InstagramWeb HTML saved: ${file.absolutePath}")
+        println("InstagramWeb HTML size: ${file.length()} bytes")
     }
 
     init {
         viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
+            session.restoreSession()
             dataStore.loadTypeDownload()
                 .catch { }
                 .onEach { value ->
@@ -256,12 +258,6 @@ class ImageCopyViewModel(
                                 )
                             )
                             val page = result.data
-                            println("Страница скачана:")
-                            println("URL: ${page.requestedUrl}")
-                            println("HTTP: ${page.status}")
-                            println("Content-Type: ${page.contentType}")
-                            println("HTML length: ${page.html.length}")
-                            println("HTML: ${page.html.take(300)}")
                             // Передаём HTML в парсер.
                            // storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
 
@@ -290,7 +286,6 @@ class ImageCopyViewModel(
                                 }
 
                                 is CarouselSearchResult.Found -> {
-                                    println("JSON публикации найден:")
                                     mediaData.clear()
                                     mediaData.addAll(
                                         parser.parseCarousel(postJson.media)

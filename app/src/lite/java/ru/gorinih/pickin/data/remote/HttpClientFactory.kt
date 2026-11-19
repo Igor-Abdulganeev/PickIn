@@ -12,6 +12,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
+import io.ktor.openapi.ParameterType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -56,10 +57,10 @@ object HttpClientFactory {
                         "application/signed-exchange;v=b3;q=0.7")
 
             header(HttpHeaders.AcceptLanguage, "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7")
-            header("Priority", "u=0, i")
+            header("Priority", "u=0, i")         
         }
 
-        install(HttpCookies)
+	install(HttpCookies)
 
         install(ContentNegotiation) {
             json(
