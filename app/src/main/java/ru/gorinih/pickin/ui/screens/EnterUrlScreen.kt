@@ -76,6 +76,7 @@ fun EnterUrlScreen(
                                 StatusJob.DOWNLOAD_POST -> R.string.button_text_download_post
                                 StatusJob.DOWNLOAD_MEDIA -> R.string.button_text_download_media
                                 StatusJob.RESEARCH -> R.string.button_text_research
+                                StatusJob.SHARE_MEDIA -> R.string.button_text_share
                             }
                         ),
                         maxLines = 1,

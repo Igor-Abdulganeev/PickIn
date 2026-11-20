@@ -23,5 +23,6 @@ data class UiState (
     val selectedAutoComplete: Boolean = true,
     @Stable
     val listMedia: List<MediaItem> = emptyList(),
-    val selectedList: ImmutableList<String>
+    val selectedList: ImmutableList<String>,
+    val isShare: Boolean = false
 )

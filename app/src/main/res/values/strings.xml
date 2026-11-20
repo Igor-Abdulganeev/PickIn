@@ -54,5 +54,6 @@
     <string name="about_code_url">https://github.com/Igor-Abdulganeev/PickIn</string>
     <string name="about_code_name">GitHub</string>
     <string name="about_copyright">© 2026 GorInIh. Все права защищены.</string>
+    <string name="button_text_share">Поделиться медиа</string>
 
 </resources>

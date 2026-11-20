@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.EmergencyRecording
 import androidx.compose.material.icons.outlined.Photo
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -49,6 +50,7 @@ fun ItemMediaCard(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     onClick: (String) -> Unit,
+    onShare: ((String) -> Unit)?,
 ) {
     val context = LocalContext.current
     val preview = LocalImagePreview.current ?: return
@@ -77,7 +79,7 @@ fun ItemMediaCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(
@@ -87,19 +89,35 @@ fun ItemMediaCard(
                 tint = if (media.isVideo) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primary
             )
             when (isLoadImage) {
-                true -> Icon(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(
-                            onClick = {
-                                onClick(media.previewUrl)
-                            }
-                        ),
-                    imageVector = if (isSelected) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                    contentDescription = null,
-                    tint = if (isSelected) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                true -> {
+                    if (onShare != null) {
+                        Icon(
+                            modifier = Modifier.padding(vertical = 4.dp).weight(1f)
+                                .clickable(
+                                    onClick = {
+                                        onShare(media.mediaUrl)
+                                    }
+                                ),
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Icon(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(
+                                onClick = {
+                                    onClick(media.previewUrl)
+                                }
+                            ),
+                        imageVector = if (isSelected) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = null,
+                        tint = if (isSelected) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 false -> Spacer(
                     modifier = Modifier

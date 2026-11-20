@@ -37,7 +37,8 @@ fun PreviewScreen(
     job: () -> StatusJob,
     selectedList: () -> ImmutableList<String>,
     onStartDownload: () -> Unit,
-    onClickMedia: (String) -> Unit
+    onClickMedia: (String) -> Unit,
+    onShareMedia: ((String) -> Unit)?
 ) {
     val listPreviewState = rememberLazyGridState()
     val selectedMedia = selectedList()
@@ -86,6 +87,11 @@ fun PreviewScreen(
                         onClick = { previewUrl ->
                             if (job() == StatusJob.WAITING_JOB)
                                 onClickMedia(previewUrl)
+                        },
+                        onShare = { url ->
+                            if (job() == StatusJob.WAITING_JOB && onShareMedia != null) {
+                                onShareMedia(url)
+                            }
                         }
                     )
                 }

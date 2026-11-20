@@ -26,5 +26,14 @@ val appModule = module {
 
     factory<DataStoreRepository> { DataStoreRepositoryImpl(dataStore = get()) }
 
-    viewModel<ImageCopyViewModel> { ImageCopyViewModel(webLoader = get(), parser = get(), storage = get(), dataStore = get(), session = get()) }
+    viewModel<ImageCopyViewModel> {
+        ImageCopyViewModel(
+            webLoader = get(),
+            parser = get(),
+            storage = get(),
+            dataStore = get(),
+            session = get(),
+            shareManager = get()
+        )
+    }
 }

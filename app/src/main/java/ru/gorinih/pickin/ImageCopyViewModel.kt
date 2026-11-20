@@ -21,6 +21,8 @@ import ru.gorinih.pickin.data.remote.models.NetworkResult
 import ru.gorinih.pickin.data.storage.DataStoreRepository
 import ru.gorinih.pickin.data.storage.InstagramSessionManager
 import ru.gorinih.pickin.data.storage.InstagramStorage
+import ru.gorinih.pickin.data.storage.ShareManager
+import ru.gorinih.pickin.data.storage.models.SavedFile
 import ru.gorinih.pickin.ui.models.EventImageCopy
 import ru.gorinih.pickin.ui.models.MediaDownload
 import ru.gorinih.pickin.ui.models.MediaItem
@@ -42,13 +44,15 @@ class ImageCopyViewModel(
     private val parser: InstagramHtmlParser,
     private val storage: InstagramStorage,
     private val dataStore: DataStoreRepository,
-    private val session: InstagramSessionManager
+    private val session: InstagramSessionManager,
+    private val shareManager: ShareManager,
 ) : ViewModel() {
 
     var imageCopyState by mutableStateOf(
         UiState(
             result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
-            selectedList = emptyList<String>().toImmutableList()
+            selectedList = emptyList<String>().toImmutableList(),
+            isShare = shareManager.accessAllowed
         )
     )
         private set
@@ -62,6 +66,7 @@ class ImageCopyViewModel(
         }
     private val mediaData: MutableList<MediaItem> = mutableListOf()
     private val selectedData: MutableList<String> = mutableListOf()
+    private val sharedData: MutableMap<String, SavedFile> = mutableMapOf()
 
     fun sHtml(html: String) {
         val file = storage.saveHtmlToFile(html)
@@ -89,7 +94,7 @@ class ImageCopyViewModel(
                     )
                 }.stateIn(viewModelScope)
             dataStore.loadKeyAutoComplete()
-                .catch {  }
+                .catch { }
                 .onEach { value ->
                     imageCopyState = imageCopyState.copy(
                         selectedAutoComplete = value
@@ -99,7 +104,7 @@ class ImageCopyViewModel(
     }
 
     fun onEvent(event: EventImageCopy) {
-        when(event) {
+        when (event) {
             is EventImageCopy.OnChangeUrl -> onChangeUrl(event.newUrl, event.startIfPossibly)
             is EventImageCopy.OnChangeTypeDownload -> onChangeTypeDownload(event.index)
             is EventImageCopy.OnChangeMediaDownload -> onChangeMediaDownload(event.index)
@@ -111,6 +116,27 @@ class ImageCopyViewModel(
             is EventImageCopy.RotateVisibilitySettings -> rotateVisibilitySettings()
             is EventImageCopy.RotateVisibilityHelp -> rotateVisibilityHelp()
             is EventImageCopy.RotateVisibilityPreview -> rotateVisibilityPreview()
+            is EventImageCopy.ShareMedia -> shareData(event.url)
+        }
+    }
+
+    private fun shareData(url: String) {
+        viewModelScope.launch(Dispatchers.Main.immediate + coroutineExceptionHandler) {
+            val savedUri = sharedData[url]
+            if (savedUri != null) {
+                shareManager.shareMedia(url = url, contentUri = savedUri.uri, typeMime = savedUri.type)
+            } else {
+                imageCopyState =
+                    imageCopyState.copy(
+                        job = StatusJob.SHARE_MEDIA,
+                    )
+                val downloaded = shareManager.getAndShareMedia(url = url)
+                if (downloaded != null) sharedData[url] = downloaded
+            }
+            imageCopyState =
+                imageCopyState.copy(
+                    job = StatusJob.WAITING_JOB,
+                )
         }
     }
 
@@ -126,7 +152,7 @@ class ImageCopyViewModel(
              * задержка нужно прочитать текущие настройки
              */
             delay(300.milliseconds)
-            when{
+            when {
                 startIfPossibly && imageCopyState.selectedTypeDownload == TypeDownload.AUTO -> getPostData()
                 startIfPossibly && imageCopyState.selectedTypeDownload == TypeDownload.MANUAL && imageCopyState.selectedAutoComplete -> getPostData()
             }
@@ -195,6 +221,7 @@ class ImageCopyViewModel(
     private fun clear(url: String) {
         mediaData.clear()
         selectedData.clear()
+        sharedData.clear()
         imageCopyState = imageCopyState.copy(
             url = url,
             job = StatusJob.WAITING_JOB,
@@ -217,6 +244,8 @@ class ImageCopyViewModel(
         if (imageCopyState.url.isNotBlank()) {
             mediaData.clear()
             selectedData.clear()
+            sharedData.clear()
+            storage.clearShare()
             imageCopyState =
                 imageCopyState.copy(
                     job = StatusJob.DOWNLOAD_POST,
@@ -265,7 +294,7 @@ class ImageCopyViewModel(
                             )
                             val page = result.data
                             // Передаём HTML в парсер.
-                           // storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
+                            // storage.saveHtmlToFile(page.html) // TODO сохранить страничку если надо
 
                             val postJson =
                                 parser.parsePost(url = imageCopyState.url, html = page.html)
@@ -330,7 +359,7 @@ class ImageCopyViewModel(
                                         R.string.result_message_error,
                                         TypeResult.ERROR,
                                         arrayOf(" ${result.errorCode} / ${result.errorMessage}"),
-                                        )
+                                    )
                                 )
                         }
                     }
@@ -386,11 +415,26 @@ class ImageCopyViewModel(
                 mediaData.first().nickName,
             )
             val downloadMediaCount = downloaded.count { it.errorMessage.isEmpty() }
-            if (allMediaCount == downloadMediaCount) imageCopyState =
-                imageCopyState.copy(
-                    url = "",
-                    listMedia = emptyList()
-                )
+            if (allMediaCount == downloadMediaCount) {
+                imageCopyState =
+                    imageCopyState.copy(
+                        url = "",
+                        listMedia = emptyList(),
+                        selectedList = emptyList<String>().toImmutableList(),
+                    )
+                sharedData.clear()
+                mediaData.clear()
+                selectedData.clear()
+            } else {
+                downloaded.forEach {
+                    if (it.uri != null) {
+                        sharedData[it.file] = SavedFile(
+                            uri = it.uri,
+                            type = it.type
+                        )
+                    }
+                }
+            }
             imageCopyState = imageCopyState.copy(
                 result = ResultMessage(
                     R.string.result_message_downloaded,

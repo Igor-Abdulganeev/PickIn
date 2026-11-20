@@ -115,6 +115,10 @@ fun PortraitActivityScreen(
                 },
                 onClickMedia = {
                     event(EventImageCopy.SelectData(previewUrl = it))
+                },
+                onShareMedia = when (imageCopyState.isShare) {
+                        true -> { url -> event(EventImageCopy.ShareMedia(url)) }
+                        false -> null
                 }
             )
         }

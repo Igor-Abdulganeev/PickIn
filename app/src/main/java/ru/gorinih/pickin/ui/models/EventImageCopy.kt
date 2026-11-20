@@ -17,4 +17,5 @@ sealed interface EventImageCopy {
     data class OnChangeAutoComplete(val value: Boolean): EventImageCopy
     data class SelectData(val previewUrl: String): EventImageCopy
     data class ClearData(val url: String = ""): EventImageCopy
+    data class ShareMedia(val url: String): EventImageCopy
 }

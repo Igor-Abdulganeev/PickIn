@@ -9,5 +9,6 @@ import android.net.Uri
 data class MediaResult(
     val file: String,
     val uri: Uri?,
-    val errorMessage: String = ""
+    val errorMessage: String = "",
+    val type: String?
 )

@@ -9,4 +9,5 @@ enum class StatusJob{
     DOWNLOAD_POST, //загрузка поста
     DOWNLOAD_MEDIA, //загрузка данных
     RESEARCH, //поиск данных
+    SHARE_MEDIA, // поделиться данными
 }

@@ -12,5 +12,5 @@ sealed class DownloadResult {
 
     data class DownloadError(val errorMessage: String? = null): DownloadResult()
 
-    data class DownloadSuccess(val fileUri: Uri): DownloadResult()
+    data class DownloadSuccess(val fileUri: Uri, val fileType: String? = null): DownloadResult()
 }

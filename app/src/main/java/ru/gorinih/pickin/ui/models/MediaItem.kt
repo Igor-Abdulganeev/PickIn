@@ -13,7 +13,8 @@ data class MediaItem(
     val width: Int = 0,
     val height: Int = 0,
     val author: String = "",
-    val nickName: String = ""
+    val nickName: String = "",
+    val sharedUrl: String = "",
 )
 
 fun CarouselItem.toMediaItem() =

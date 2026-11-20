@@ -2,6 +2,7 @@ package ru.gorinih.pickin.data.storage
 
 import android.content.ContentValues
 import android.content.Context
+import android.os.Environment
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import io.ktor.client.HttpClient
@@ -43,17 +44,38 @@ class InstagramStorage(
                 is DownloadResult.DownloadError -> {resultList.add(MediaResult(
                     file = url,
                     uri = null,
-                    errorMessage = result.errorMessage ?: ""
+                    errorMessage = result.errorMessage ?: "",
+                    type = null
                 ))}
                 is DownloadResult.DownloadSuccess -> {
                     resultList.add(MediaResult(
                         file = url,
-                        uri = result.fileUri
+                        uri = result.fileUri,
+                        type = result.fileType
                     ))
                 }
             }
         }
         return@withContext resultList
+    }
+
+    suspend fun takeFileForShare(url: String): DownloadResult = downloadFile(
+            url = url,
+            authorName = SHARE_DIR,
+            authorNick = ""
+        )
+
+    fun clearShare() {
+        val contentResolver = context.contentResolver ?: return
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val targetPath = "${Environment.DIRECTORY_DOWNLOADS}/InstaSave/$SHARE_DIR/"
+        val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ?"
+        val selectionArgs = arrayOf("$targetPath%")
+        try {
+            contentResolver.delete(collection, selection, selectionArgs)
+        } catch (ex: CancellationException) {
+            throw ex
+        } catch (_: Throwable) {}
     }
 
     private suspend fun downloadFile(url: String, authorName: String, authorNick: String): DownloadResult {
@@ -71,7 +93,7 @@ class InstagramStorage(
             else -> "Default"
         }
         val contentValue = ContentValues().apply {
-            put(MediaStore.Downloads.RELATIVE_PATH, "Download/InstaSave/$dir/")
+            put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/InstaSave/$dir/")
             put(MediaStore.Downloads.DISPLAY_NAME, fileName)
             put(MediaStore.Downloads.MIME_TYPE, mimeType)
             put(MediaStore.Downloads.IS_PENDING, 1)
@@ -103,7 +125,7 @@ class InstagramStorage(
             }
             contentResolver.update(fileUri, contentUpdateValue, null)
             isDownloaded = true
-            DownloadResult.DownloadSuccess(fileUri = fileUri)
+            DownloadResult.DownloadSuccess(fileUri = fileUri, fileType = mimeType)
         } catch (_: CancellationException) {
             DownloadResult.DownloadCancel
         } catch (ex: Throwable) {
@@ -116,11 +138,13 @@ class InstagramStorage(
     }
 
     private suspend fun downloadStreamFile(channel: ByteReadChannel, outStream: OutputStream) {
-        val buffer = ByteArray(16254)
-        while (!channel.isClosedForRead) {
-            val bytes = channel.readAvailable(buffer)
-            if(bytes>0)  {
-                outStream.write(buffer, 0, bytes)
+        withContext(Dispatchers.IO) {
+            val buffer = ByteArray(16254)
+            while (!channel.isClosedForRead) {
+                val bytes = channel.readAvailable(buffer)
+                if(bytes>0)  {
+                    outStream.write(buffer, 0, bytes)
+                }
             }
         }
     }
@@ -129,4 +153,8 @@ class InstagramStorage(
         MimeTypeMap.getFileExtensionFromUrl(url).run {
             MimeTypeMap.getSingleton().getMimeTypeFromExtension(this)
         }
+
+    companion object {
+        private const val SHARE_DIR = "SharedFiles"
+    }
 }
