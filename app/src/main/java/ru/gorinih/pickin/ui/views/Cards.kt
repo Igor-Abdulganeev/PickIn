@@ -48,6 +48,7 @@ import ru.gorinih.pickin.ui.models.MediaItem
 fun ItemMediaCard(
     media: MediaItem,
     isSelected: Boolean,
+    isDownload: Boolean,
     modifier: Modifier = Modifier,
     onClick: (String) -> Unit,
     onShare: ((String) -> Unit)?,
@@ -67,7 +68,7 @@ fun ItemMediaCard(
     val isPreviewOpen =
         preview.selectedPreviewUrl == media.previewUrl
 
-    var isLoadImage by remember { mutableStateOf(false) }
+    var previewDone by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier.border(
@@ -88,11 +89,12 @@ fun ItemMediaCard(
                 contentDescription = null,
                 tint = if (media.isVideo) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primary
             )
-            when (isLoadImage) {
+            when (previewDone) {
                 true -> {
                     if (onShare != null) {
                         Icon(
-                            modifier = Modifier.padding(vertical = 4.dp).weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
                                 .clickable(
                                     onClick = {
                                         onShare(media.mediaUrl)
@@ -114,8 +116,11 @@ fun ItemMediaCard(
                             ),
                         imageVector = if (isSelected) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                         contentDescription = null,
-                        tint = if (isSelected) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = when {
+                            isDownload && isSelected-> MaterialTheme.colorScheme.primary
+                            isSelected -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
 
@@ -136,11 +141,11 @@ fun ItemMediaCard(
                     .combinedClickable(
                         enabled = true,
                         onClick = {
-                            if (isLoadImage)
+                            if (previewDone)
                                 onClick(media.previewUrl)
                         },
                         onLongClick = {
-                            if (isLoadImage)
+                            if (previewDone)
                                 preview.onLongClick(media.previewUrl)
                         }
                     )
@@ -161,10 +166,10 @@ fun ItemMediaCard(
                         )
                         .clip(RoundedCornerShape(size = 20.dp)),
                     onSuccess = {
-                        isLoadImage = true
+                        previewDone = true
                     },
                     onError = {
-                        isLoadImage = false
+                        previewDone = false
                     }
                 )
 

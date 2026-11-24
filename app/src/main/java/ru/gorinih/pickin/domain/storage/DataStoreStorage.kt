@@ -1,4 +1,4 @@
-package ru.gorinih.pickin.data.storage
+package ru.gorinih.pickin.domain.storage
 
 import android.content.Context
 import androidx.datastore.core.DataStore

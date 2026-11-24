@@ -18,15 +18,6 @@ import ru.gorinih.pickin.data.storage.ShareManager
  */
 
 val tierModule = module {
-    single<Json> {
-        Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-            coerceInputValues = true
-            encodeDefaults = true
-        }
-    }
-
     single<CryptoManager> { CryptoManager }
 
     single{

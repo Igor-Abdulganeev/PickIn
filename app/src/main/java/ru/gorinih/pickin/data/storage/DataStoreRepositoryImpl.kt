@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import ru.gorinih.pickin.domain.storage.DataStoreRepository
 import ru.gorinih.pickin.ui.models.MediaDownload
 import ru.gorinih.pickin.ui.models.TypeDownload
 

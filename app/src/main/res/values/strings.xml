@@ -18,7 +18,7 @@
     <string name="header_status_label">Статус:</string>
     <string name="button_text_settings">Настройки</string>
     <string name="button_text_help">Помощь</string>
-    <string name="count_selected_label">Выбрано файлов: %1$s</string>
+    <string name="count_selected_label">Выбрано файлов для загрузки: %1$s</string>
 
     <string name="result_message_start">Введите адрес публикации</string>
     <string name="result_message_founded">Найдено файлов %1$s, скачиваем %2$s</string>

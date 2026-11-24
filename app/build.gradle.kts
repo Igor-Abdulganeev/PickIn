@@ -12,8 +12,8 @@ val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) localProperties.load(FileInputStream(localPropertiesFile))
 
-val vCode = libs.versions.version.code.get().toInt() ?: 8
-val vName = libs.versions.version.name.get() ?: "3"
+val vCode = libs.versions.version.code.get().toInt()
+val vName = libs.versions.version.name.get()
 
 fun SigningConfig.loadFromPreference(prefix: String) {
     val path = localProperties.getProperty("${prefix}_PATH")
@@ -173,12 +173,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.work)
 
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.android)
+    implementation(libs.koin.worker)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)

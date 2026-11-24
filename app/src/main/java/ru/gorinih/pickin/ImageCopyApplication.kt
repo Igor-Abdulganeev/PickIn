@@ -5,6 +5,7 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import ru.gorinih.pickin.di.appModule
 import ru.gorinih.pickin.di.networkModule
@@ -20,6 +21,7 @@ class ImageCopyApplication: Application() {
 
         startKoin {
             androidContext(this@ImageCopyApplication)
+            workManagerFactory()
             modules(
                 appModule,
                 tierModule,

@@ -4,7 +4,11 @@ import coil3.ImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.workmanager.dsl.worker
 import org.koin.dsl.module
+import ru.gorinih.pickin.data.remote.DownloadWorker
+import ru.gorinih.pickin.domain.remote.StarterDownloadWorker
+import ru.gorinih.pickin.data.remote.StarterDownloadWorkerImpl
 import ru.gorinih.pickin.data.remote.WebLoader
 
 /**
@@ -32,4 +36,16 @@ val networkModule = module {
             .crossfade(true)
             .build()
     }
+
+    worker {
+        DownloadWorker(
+            context = androidContext(),
+            params = get(),
+            storage = get(),
+            json = get()
+        )
+    }
+
+    factory<StarterDownloadWorker> { StarterDownloadWorkerImpl(context = androidContext(), json = get()) }
+
 }

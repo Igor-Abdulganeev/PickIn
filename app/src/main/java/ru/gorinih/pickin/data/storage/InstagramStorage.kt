@@ -35,30 +35,6 @@ class InstagramStorage(
         return file
     }
 
-    suspend fun downloadsFiles(urls: List<String>, authorName: String, authorNick: String): List<MediaResult> = withContext(Dispatchers.IO) {
-        val resultList = mutableListOf<MediaResult>()
-        for (url in urls) {
-            ensureActive()
-            when(val result = downloadFile(url, authorName, authorNick)) {
-                is DownloadResult.DownloadCancel -> return@withContext emptyList()
-                is DownloadResult.DownloadError -> {resultList.add(MediaResult(
-                    file = url,
-                    uri = null,
-                    errorMessage = result.errorMessage ?: "",
-                    type = null
-                ))}
-                is DownloadResult.DownloadSuccess -> {
-                    resultList.add(MediaResult(
-                        file = url,
-                        uri = result.fileUri,
-                        type = result.fileType
-                    ))
-                }
-            }
-        }
-        return@withContext resultList
-    }
-
     suspend fun takeFileForShare(url: String): DownloadResult = downloadFile(
             url = url,
             authorName = SHARE_DIR,
@@ -78,7 +54,7 @@ class InstagramStorage(
         } catch (_: Throwable) {}
     }
 
-    private suspend fun downloadFile(url: String, authorName: String, authorNick: String): DownloadResult {
+    suspend fun downloadFile(url: String, authorName: String, authorNick: String): DownloadResult {
         if (url.isEmpty()) return DownloadResult.DownloadError(errorMessage = "Files path is empty.")
         val contentResolver = context.contentResolver ?: return DownloadResult.DownloadError(
             errorMessage = "Can`t get content resolver."

@@ -16,9 +16,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.gorinih.pickin.data.parsers.InstagramHtmlParser
 import ru.gorinih.pickin.data.parsers.models.CarouselSearchResult
+import ru.gorinih.pickin.domain.remote.StarterDownloadWorker
 import ru.gorinih.pickin.data.remote.WebLoader
+import ru.gorinih.pickin.data.remote.models.DownloadState
 import ru.gorinih.pickin.data.remote.models.NetworkResult
-import ru.gorinih.pickin.data.storage.DataStoreRepository
+import ru.gorinih.pickin.domain.storage.DataStoreRepository
 import ru.gorinih.pickin.data.storage.InstagramSessionManager
 import ru.gorinih.pickin.data.storage.InstagramStorage
 import ru.gorinih.pickin.data.storage.ShareManager
@@ -46,12 +48,14 @@ class ImageCopyViewModel(
     private val dataStore: DataStoreRepository,
     private val session: InstagramSessionManager,
     private val shareManager: ShareManager,
+    private val downloader: StarterDownloadWorker,
 ) : ViewModel() {
 
     var imageCopyState by mutableStateOf(
         UiState(
             result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
             selectedList = emptyList<String>().toImmutableList(),
+            downloadedList = emptyList<String>().toImmutableList(),
             isShare = shareManager.accessAllowed
         )
     )
@@ -67,6 +71,7 @@ class ImageCopyViewModel(
     private val mediaData: MutableList<MediaItem> = mutableListOf()
     private val selectedData: MutableList<String> = mutableListOf()
     private val sharedData: MutableMap<String, SavedFile> = mutableMapOf()
+    private val downloadedData: MutableList<String> = mutableListOf()
 
     fun sHtml(html: String) {
         val file = storage.saveHtmlToFile(html)
@@ -124,7 +129,11 @@ class ImageCopyViewModel(
         viewModelScope.launch(Dispatchers.Main.immediate + coroutineExceptionHandler) {
             val savedUri = sharedData[url]
             if (savedUri != null) {
-                shareManager.shareMedia(url = url, contentUri = savedUri.uri, typeMime = savedUri.type)
+                shareManager.shareMedia(
+                    url = url,
+                    contentUri = savedUri.uri,
+                    typeMime = savedUri.type
+                )
             } else {
                 imageCopyState =
                     imageCopyState.copy(
@@ -222,6 +231,7 @@ class ImageCopyViewModel(
         mediaData.clear()
         selectedData.clear()
         sharedData.clear()
+        downloadedData.clear()
         imageCopyState = imageCopyState.copy(
             url = url,
             job = StatusJob.WAITING_JOB,
@@ -234,7 +244,8 @@ class ImageCopyViewModel(
     private fun getSelectedData() {
         viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
             val listOfMedia: List<String> =
-                mediaData.filter { it.previewUrl in selectedData }.map { it.mediaUrl }
+                mediaData.filter { media -> media.previewUrl in selectedData && downloadedData.firstOrNull { media.mediaUrl == it } == null }
+                    .map { it.mediaUrl }
             if (listOfMedia.isNotEmpty())
                 getMediaData(listOfMedia)
         }
@@ -246,6 +257,7 @@ class ImageCopyViewModel(
             selectedData.clear()
             sharedData.clear()
             storage.clearShare()
+            downloadedData.clear()
             imageCopyState =
                 imageCopyState.copy(
                     job = StatusJob.DOWNLOAD_POST,
@@ -398,61 +410,92 @@ class ImageCopyViewModel(
 
     private suspend fun getMediaData(listUrl: List<String>) {
         val allMediaCount = mediaData.count()
-
+        var countNeedDownload = listUrl.count()
         imageCopyState =
             imageCopyState.copy(
                 job = StatusJob.DOWNLOAD_MEDIA,
                 result = ResultMessage(
                     R.string.result_message_founded,
                     TypeResult.WORK,
-                    arrayOf("$allMediaCount", "${listUrl.count()}")
+                    arrayOf("$allMediaCount", "$countNeedDownload")
                 )
             )
-        try {
-            val downloaded = storage.downloadsFiles(
-                listUrl,
-                mediaData.first().author,
-                mediaData.first().nickName,
-            )
-            val downloadMediaCount = downloaded.count { it.errorMessage.isEmpty() }
-            if (allMediaCount == downloadMediaCount) {
-                imageCopyState =
-                    imageCopyState.copy(
-                        url = "",
-                        listMedia = emptyList(),
-                        selectedList = emptyList<String>().toImmutableList(),
-                    )
-                sharedData.clear()
-                mediaData.clear()
-                selectedData.clear()
-            } else {
-                downloaded.forEach {
-                    if (it.uri != null) {
-                        sharedData[it.file] = SavedFile(
-                            uri = it.uri,
-                            type = it.type
+
+        downloader.startDownload(
+            listUrl,
+            mediaData.first().author,
+            mediaData.first().nickName,
+        ).collect { result ->
+            when (result) {
+                is DownloadState.Error -> {
+                    imageCopyState = imageCopyState.copy(
+                        result = ResultMessage(
+                            R.string.result_message_error,
+                            TypeResult.ERROR,
+                            arrayOf(result.errorMessage ?: "Unknown error")
                         )
+                    )
+                }
+
+                is DownloadState.Progress -> {
+                    countNeedDownload -= 1
+                    imageCopyState =
+                        imageCopyState.copy(
+                            job = StatusJob.DOWNLOAD_MEDIA,
+                            result = ResultMessage(
+                                R.string.result_message_founded,
+                                TypeResult.WORK,
+                                arrayOf("$allMediaCount", "$countNeedDownload")
+                            )
+                        )
+                }
+
+                is DownloadState.Success -> {
+                    val downloaded = result.files
+                    val downloadMediaCount = downloaded.count { it.errorMessage.isEmpty() }
+                    if (allMediaCount == downloadMediaCount) {
+                        imageCopyState =
+                            imageCopyState.copy(
+                                url = "",
+                                listMedia = emptyList(),
+                                selectedList = emptyList<String>().toImmutableList(),
+                            )
+                        sharedData.clear()
+                        mediaData.clear()
+                        selectedData.clear()
+                        downloadedData.clear()
+                    } else {
+                        downloadedData.addAll(downloaded.filter { it.uri != null }.map { it.file })
+                        downloaded.forEach {
+                            if (it.uri != null) {
+                                sharedData[it.file] = SavedFile(
+                                    uri = it.uri,
+                                    type = it.type
+                                )
+                            }
+                        }
                     }
+                    imageCopyState = imageCopyState.copy(
+                        result = ResultMessage(
+                            R.string.result_message_downloaded,
+                            TypeResult.DONE,
+                            arrayOf("${downloadedData.count()}", "$allMediaCount")
+                        ),
+                        job = StatusJob.WAITING_JOB,
+                        downloadedList = downloadedData.toImmutableList()
+                    )
                 }
             }
-            imageCopyState = imageCopyState.copy(
-                result = ResultMessage(
-                    R.string.result_message_downloaded,
-                    TypeResult.DONE,
-                    arrayOf("$downloadMediaCount", "$allMediaCount")
-                ),
-                job = StatusJob.WAITING_JOB
-            )
-        } catch (ex: CancellationException) {
-            throw ex
-        } catch (ex: Throwable) {
-            imageCopyState = imageCopyState.copy(
-                result = ResultMessage(
-                    R.string.result_message_error,
-                    TypeResult.ERROR,
-                    arrayOf("${ex.localizedMessage}")
-                )
-            )
         }
+    }
+
+    companion object {
+        const val KEY_POST_AUTHOR = "inst.key.post.author"
+        const val KEY_POST_NICK = "inst.key.post.nick"
+        const val KEY_POST_URLS = "inst.key.post.urls"
+
+        const val RESULT_KEY_FILE_URL = "inst.result.key.file.url"
+        const val RESULT_KEY_FILE_IS_DONE = "inst.result.key.file.is.done"
+        const val RESULT_DOWNLOAD_FILES = "inst.result.download.files"
     }
 }

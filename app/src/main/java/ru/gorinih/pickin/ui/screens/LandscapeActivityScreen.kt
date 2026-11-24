@@ -120,6 +120,7 @@ fun LandscapeActivityScreen(
                     job = { imageCopyState.job },
                     listMedia = imageCopyState.listMedia.toImmutableList(),
                     selectedList = { imageCopyState.selectedList },
+                    downloadedList = { imageCopyState.downloadedList },
                     onStartDownload = {
                         event(EventImageCopy.GetSelectedData)
                     },

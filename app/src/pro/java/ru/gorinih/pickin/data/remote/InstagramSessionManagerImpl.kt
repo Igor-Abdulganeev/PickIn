@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
 import ru.gorinih.pickin.data.remote.models.InstagramSession
 import ru.gorinih.pickin.data.storage.CryptoManager
-import ru.gorinih.pickin.data.storage.DataStoreRepository
+import ru.gorinih.pickin.domain.storage.DataStoreRepository
 
 /**
  * Created by Igor Abdulganeev on 17.11.2026

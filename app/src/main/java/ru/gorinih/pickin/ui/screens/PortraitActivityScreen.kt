@@ -110,6 +110,7 @@ fun PortraitActivityScreen(
                 job = { imageCopyState.job },
                 listMedia = imageCopyState.listMedia.toImmutableList(),
                 selectedList = { imageCopyState.selectedList },
+                downloadedList = { imageCopyState.downloadedList },
                 onStartDownload = {
                     event(EventImageCopy.GetSelectedData)
                 },
@@ -135,7 +136,8 @@ fun PortraitActivityScreenPreview(
             imageCopyState = UiState(
                 url = "тестовый url",
                 result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
-                selectedList = emptyList<String>().toImmutableList()
+                selectedList = emptyList<String>().toImmutableList(),
+                downloadedList = emptyList<String>().toImmutableList(),
             )
         ) {}
     }

@@ -24,5 +24,6 @@ data class UiState (
     @Stable
     val listMedia: List<MediaItem> = emptyList(),
     val selectedList: ImmutableList<String>,
+    val downloadedList: ImmutableList<String>,
     val isShare: Boolean = false
 )

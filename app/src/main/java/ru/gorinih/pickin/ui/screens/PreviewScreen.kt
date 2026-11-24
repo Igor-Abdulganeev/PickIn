@@ -36,12 +36,14 @@ fun PreviewScreen(
     listMedia: ImmutableList<MediaItem>,
     job: () -> StatusJob,
     selectedList: () -> ImmutableList<String>,
+    downloadedList: () -> ImmutableList<String>,
     onStartDownload: () -> Unit,
     onClickMedia: (String) -> Unit,
     onShareMedia: ((String) -> Unit)?
 ) {
     val listPreviewState = rememberLazyGridState()
     val selectedMedia = selectedList()
+    val downloadedMedia = downloadedList()
 
     if (listMedia.isNotEmpty()) {
         Column(
@@ -60,12 +62,14 @@ fun PreviewScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp, horizontal = 8.dp),
-                enabled = selectedMedia.isNotEmpty() && job() == StatusJob.WAITING_JOB,
+                enabled = selectedMedia.isNotEmpty() && job() == StatusJob.WAITING_JOB &&
+                !downloadedMedia.containsAll(selectedMedia),
                 onSavedClick = onStartDownload
             )
             Text(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                text = stringResource(R.string.count_selected_label, "${selectedMedia.count()}"),
+                text = stringResource(R.string.count_selected_label,
+                    "${selectedMedia.count { s -> !downloadedMedia.contains(s) }}"),
                 style = MaterialTheme.typography.labelMedium
                     .copy(color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.SemiBold),
@@ -84,6 +88,7 @@ fun PreviewScreen(
                     ItemMediaCard(
                         media = item,
                         isSelected = selectedMedia.contains(item.previewUrl),
+                        isDownload = downloadedMedia.contains(item.mediaUrl),
                         onClick = { previewUrl ->
                             if (job() == StatusJob.WAITING_JOB)
                                 onClickMedia(previewUrl)
