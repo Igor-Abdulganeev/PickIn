@@ -71,7 +71,7 @@ class ImageCopyViewModel(
     private val mediaData: MutableList<MediaItem> = mutableListOf()
     private val selectedData: MutableList<String> = mutableListOf()
     private val sharedData: MutableMap<String, SavedFile> = mutableMapOf()
-    private val downloadedData: MutableList<String> = mutableListOf()
+    private val downloadedData: MutableSet<String> = mutableSetOf()
 
     fun sHtml(html: String) {
         val file = storage.saveHtmlToFile(html)
@@ -443,16 +443,20 @@ class ImageCopyViewModel(
                 }
 
                 is DownloadState.Progress -> {
-                    countNeedDownload -= 1
-                    imageCopyState =
-                        imageCopyState.copy(
-                            job = StatusJob.DOWNLOAD_MEDIA,
-                            result = ResultMessage(
-                                R.string.result_message_founded,
-                                TypeResult.WORK,
-                                arrayOf("$allMediaCount", "$countNeedDownload")
+                    if (result.isDone) {
+                        downloadedData.add(result.url)
+                        countNeedDownload -= 1
+                        imageCopyState =
+                            imageCopyState.copy(
+                                job = StatusJob.DOWNLOAD_MEDIA,
+                                result = ResultMessage(
+                                    R.string.result_message_founded,
+                                    TypeResult.WORK,
+                                    arrayOf("$allMediaCount", "$countNeedDownload")
+                                ),
+                                downloadedList = downloadedData.toImmutableList()
                             )
-                        )
+                    }
                 }
 
                 is DownloadState.Success -> {
