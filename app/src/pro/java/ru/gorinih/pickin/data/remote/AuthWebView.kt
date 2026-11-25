@@ -23,7 +23,7 @@ import ru.gorinih.pickin.data.remote.models.InstagramSession
  * Created by Igor Abdulganeev on 17.11.2026
  */
 
-private const val instagramUrl = "https://www.instagram.com/"
+private const val instagramUrl = "https://www.instagram.com/accounts/login/"
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable

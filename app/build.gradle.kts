@@ -39,6 +39,8 @@ android {
         versionCode = vCode
         versionName = vName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "VNAME", "\"$vName\"")
     }
 
     signingConfigs {
@@ -108,6 +110,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

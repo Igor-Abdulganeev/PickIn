@@ -44,7 +44,7 @@ class InstagramStorage(
     fun clearShare() {
         val contentResolver = context.contentResolver ?: return
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val targetPath = "${Environment.DIRECTORY_DOWNLOADS}/InstaSave/$SHARE_DIR/"
+        val targetPath = "${Environment.DIRECTORY_DOWNLOADS}/PickInSave/$SHARE_DIR/"
         val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ?"
         val selectionArgs = arrayOf("$targetPath%")
         try {
@@ -69,7 +69,10 @@ class InstagramStorage(
             else -> "Default"
         }
         val contentValue = ContentValues().apply {
-            put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/InstaSave/$dir/")
+            put(
+                MediaStore.Downloads.RELATIVE_PATH,
+                "${Environment.DIRECTORY_DOWNLOADS}/PickInSave/$dir/"
+            )
             put(MediaStore.Downloads.DISPLAY_NAME, fileName)
             put(MediaStore.Downloads.MIME_TYPE, mimeType)
             put(MediaStore.Downloads.IS_PENDING, 1)

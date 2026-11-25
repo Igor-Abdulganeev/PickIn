@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,14 +32,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.AutoMode
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.EmergencyRecording
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,8 +54,9 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -62,16 +65,19 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_NO
 import androidx.compose.ui.tooling.preview.AndroidUiModes.UI_MODE_NIGHT_YES
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import ru.gorinih.pickin.BuildConfig
 import ru.gorinih.pickin.R
 import ru.gorinih.pickin.ui.models.HelpAnimationSteps
 import ru.gorinih.pickin.ui.models.ResultMessage
@@ -79,6 +85,7 @@ import ru.gorinih.pickin.ui.models.StatusJob
 import ru.gorinih.pickin.ui.models.TypeDownload
 import ru.gorinih.pickin.ui.models.TypeResult
 import ru.gorinih.pickin.ui.theme.PickInTheme
+import ru.gorinih.pickin.ui.views.ChipPanelSelectTypeList
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -88,6 +95,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun HelpScreen() {
     val state = rememberScrollState()
+    val locale = Locale.current
 
     Column(
         modifier = Modifier
@@ -103,16 +111,161 @@ fun HelpScreen() {
             .verticalScroll(state = state)
     ) {
         Text(
-            text = stringResource(R.string.help_text_one),
-            modifier = Modifier.padding(16.dp),
+            text = "${stringResource(R.string.help_app_name)}  ${
+                stringResource(
+                    R.string.help_version,
+                    "${BuildConfig.VNAME}.${BuildConfig.VERSION_CODE}",
+                    BuildConfig.FLAVOR_tier.toUpperCase(locale)
+                )
+            }",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = stringResource(R.string.help_text_about),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        Text(
+            text = stringResource(R.string.help_text_vpn_warning),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Justify
+        )
+        Text(
+            text = stringResource(R.string.help_text_vpn),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            textAlign = TextAlign.Justify
+        )
+        Text(
+            text = stringResource(R.string.help_text_restriction),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        Text(
+            text = stringResource(R.string.help_text_share),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Justify
         )
         SampleShareLink()
         Text(
-            text = stringResource(R.string.help_text_two),
-            modifier = Modifier.padding(16.dp),
+            text = stringResource(R.string.help_text_save),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        Text(
+            text = stringResource(R.string.help_text_setting),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        SampleSettings()
+        Text(
+            text = stringResource(R.string.help_text_setting_auto),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        SampleSettingsAuto()
+        Text(
+            text = stringResource(R.string.help_text_setting_manual),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        SampleSettingsManual()
+        Text(
+            text = stringResource(R.string.help_text_preview),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.help_text_preview_photo),
+                modifier = Modifier,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Start
+            )
+            Icon(
+                modifier = Modifier,
+                imageVector = Icons.Outlined.EmergencyRecording,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.errorContainer
+            )
+
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.help_text_preview_video),
+                modifier = Modifier,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Start
+            )
+            Icon(
+                modifier = Modifier,
+                imageVector = Icons.Outlined.Photo,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+
+        }
+        Text(
+            text = stringResource(R.string.help_text_difference),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Justify
@@ -752,10 +905,76 @@ fun SampleShareLinkLightPreview() {
     }
 }
 
+@Composable
+fun SampleSettings() {
+    val listOfDownloadTypes = listOf(
+        stringResource(R.string.list_type_download_first),
+        stringResource(R.string.list_type_download_second)
+    ).toImmutableList()
+
+    NotUsabilityBox {
+        ChipPanelSelectTypeList(
+            selected = { 0 },
+            textChips = listOfDownloadTypes,
+            onClick = {},
+            text = stringResource(R.string.header_type_download_label)
+        )
+    }
+
+}
+
+@Composable
+fun SampleSettingsAuto() {
+    val listOfMediaTypes = listOf(
+        stringResource(R.string.list_media_download_first),
+        stringResource(R.string.list_media_download_second),
+        stringResource(R.string.list_media_download_third)
+    ).toImmutableList()
+    NotUsabilityBox {
+        ChipPanelSelectTypeList(
+            selected = { 0 },
+            textChips = listOfMediaTypes,
+            onClick = {},
+            text = stringResource(R.string.header_media_download_label)
+        )
+    }
+}
+
+@Composable
+fun SampleSettingsManual() {
+    NotUsabilityBox {
+        ChipPanelSelectTypeList(
+            selected = { 0 },
+            textChips = listOf(stringResource(R.string.setting_key_auto_complete)).toImmutableList(),
+            onClick = {},
+            needIcon = true
+        )
+    }
+}
+
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun SampleShareLinkNightPreview() {
     PickInTheme {
         HelpScreen()
     }
+}
+
+@Composable
+fun NotUsabilityBox(
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    awaitPointerEvent(PointerEventPass.Initial)
+                        .changes
+                        .forEach { it.consume() }
+                }
+            }
+        },
+        content = content
+    )
 }
