@@ -1,4 +1,6 @@
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.SigningConfig
+import com.android.build.api.variant.BuiltArtifactsLoader
 import org.jetbrains.kotlin.konan.properties.Properties
 import java.io.FileInputStream
 
@@ -6,6 +8,42 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+}
+
+abstract class RenameApkTask : DefaultTask() {
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val apkFolder: DirectoryProperty
+
+    @get:Internal
+    abstract val builtArtifactsLoader: Property<BuiltArtifactsLoader>
+
+    @get:Input
+    abstract val targetFileName: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun taskAction() {
+        val builtArtifacts = builtArtifactsLoader.get().load(apkFolder.get())
+            ?: throw RuntimeException("Не удалось загрузить метаданные APK из ${apkFolder.get().asFile}")
+
+        val outDir = outputDir.get().asFile
+        outDir.mkdirs()
+
+        builtArtifacts.elements.forEach { artifact ->
+            val sourceFile = File(artifact.outputFile)
+            if (sourceFile.exists()) {
+                val destinationFile = File(outDir, targetFileName.get())
+                sourceFile.copyTo(destinationFile, overwrite = true)
+                println("APK успешно скопирован в: ${destinationFile.absolutePath}")
+            } else {
+                throw RuntimeException("Файл не найден: ${sourceFile.absolutePath}")
+            }
+        }
+    }
 }
 
 val localProperties = Properties()
@@ -132,23 +170,18 @@ androidComponents {
             }
             append(".apk")
         }
-        println("FileName === $fileName")
-        val variantName =
-            "${flavor?.replaceFirstChar { it.uppercaseChar() }}${buildType?.replaceFirstChar { it.uppercaseChar() }}"
-        tasks.register("assemble${variantName}Apk") {
-            description = ""
-            dependsOn("assemble${variantName}")
-            doLast {
-                val apkDir =
-                    layout.buildDirectory.dir("outputs/apk/${flavor}/${buildType}").get().asFile
 
-                apkDir.listFiles()?.forEach { file ->
-                    if (file.extension == "apk") {
-                        val renamedFile = File(file.parent, fileName)
-                        file.renameTo(renamedFile)
-                    }
-                }
-            }
+        // ./gradlew :app:assembleProdLiteReleaseApk  //  assembleProdProReleaseApk
+        val variantNameCap = variant.name.replaceFirstChar { it.uppercaseChar() }
+
+        tasks.register<RenameApkTask>("assemble${variantNameCap}Apk") {
+            description = "Build APK for ${variant.name}"
+
+            apkFolder.set(variant.artifacts.get(SingleArtifact.APK))
+            builtArtifactsLoader.set(variant.artifacts.getBuiltArtifactsLoader())
+            targetFileName.set(fileName)
+
+            outputDir.set(layout.buildDirectory.dir("outputs/renamed_apk/${variant.name}"))
         }
     }
 
