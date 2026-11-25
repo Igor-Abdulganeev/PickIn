@@ -7,17 +7,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentMap
 import ru.gorinih.pickin.R
 import ru.gorinih.pickin.ui.models.EventImageCopy
+import ru.gorinih.pickin.ui.models.MediaItem
+import ru.gorinih.pickin.ui.models.ResultMessage
 import ru.gorinih.pickin.ui.models.ScreenBlocks
+import ru.gorinih.pickin.ui.models.TypeResult
 import ru.gorinih.pickin.ui.models.UiState
+import ru.gorinih.pickin.ui.theme.PickInTheme
 import ru.gorinih.pickin.ui.views.ChipItem
+import kotlin.collections.mapOf
 
 /**
  * Created by Igor Abdulganeev on 06.11.2026
@@ -72,7 +78,9 @@ fun LandscapeActivityScreen(
                     }
                 )
             }
-            if (imageCopyState.blocks[ScreenBlocks.INPUT] == true)
+            AnimatedVisibility(
+                visible = imageCopyState.blocks[ScreenBlocks.INPUT] == true
+            ) {
                 EnterUrlScreen(
                     url = { imageCopyState.url },
                     job = { imageCopyState.job },
@@ -84,11 +92,13 @@ fun LandscapeActivityScreen(
                     onDownloadUrl = { event(EventImageCopy.GetPostData) },
                     onClear = { event(EventImageCopy.ClearData()) }
                 )
-            AnimatedVisibility(
-                visible = imageCopyState.blocks[ScreenBlocks.HELP] == true
-            ) {
-                HelpScreen()
             }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             AnimatedVisibility(
                 visible = imageCopyState.blocks[ScreenBlocks.SETTINGS] == true
             ) {
@@ -107,12 +117,11 @@ fun LandscapeActivityScreen(
                     }
                 )
             }
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
+            AnimatedVisibility(
+                visible = imageCopyState.blocks[ScreenBlocks.HELP] == true
+            ) {
+                HelpScreen()
+            }
             AnimatedVisibility(
                 visible = imageCopyState.blocks[ScreenBlocks.PREVIEW] == true,
             ) {
@@ -134,5 +143,43 @@ fun LandscapeActivityScreen(
                 )
             }
         }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    device = "spec:width=411dp,height=891dp,orientation=landscape"
+)
+@Composable
+fun LandscapeActivityScreenPreview(
+) {
+    PickInTheme {
+        LandscapeActivityScreen(
+            imageCopyState = UiState(
+                url = "тестовый url",
+                result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
+                selectedList = emptyList<String>().toImmutableList(),
+                downloadedList = emptyList<String>().toImmutableList(),
+                listMedia = listOf(
+                    MediaItem(
+                        isVideo = false,
+                        previewUrl = "R.drawable.insta_top",
+                        mediaUrl = "tmp"
+                    ),
+                    MediaItem(
+                        isVideo = false,
+                        previewUrl = "tmp",
+                        mediaUrl = "tmp"
+                    )
+                ),
+
+                blocks = mapOf(
+                    ScreenBlocks.INPUT to true,
+                    ScreenBlocks.SETTINGS to false,
+                    ScreenBlocks.PREVIEW to true,
+                    ScreenBlocks.HELP to false
+                ).toPersistentMap()
+            )
+        ) {}
     }
 }

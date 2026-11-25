@@ -7,23 +7,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.toImmutableList
 import ru.gorinih.pickin.R
 import ru.gorinih.pickin.ui.models.EventImageCopy
+import ru.gorinih.pickin.ui.models.MediaItem
 import ru.gorinih.pickin.ui.models.ResultMessage
 import ru.gorinih.pickin.ui.models.ScreenBlocks
 import ru.gorinih.pickin.ui.models.TypeResult
 import ru.gorinih.pickin.ui.models.UiState
 import ru.gorinih.pickin.ui.theme.PickInTheme
 import ru.gorinih.pickin.ui.views.ChipItem
-import ru.gorinih.pickin.ui.views.ChipPanelSelectTypeList
-import ru.gorinih.pickin.ui.views.ElevateButton
 
 /**
  * Created by Igor Abdulganeev on 06.11.2026
@@ -68,7 +67,11 @@ fun PortraitActivityScreen(
                 }
             )
         }
-        if (imageCopyState.blocks[ScreenBlocks.INPUT] == true)
+        AnimatedVisibility(
+            visible = imageCopyState.blocks[ScreenBlocks.INPUT] == true &&
+                    imageCopyState.blocks[ScreenBlocks.SETTINGS] == false &&
+                    imageCopyState.blocks[ScreenBlocks.HELP] == false
+        ) {
             EnterUrlScreen(
                 url = { imageCopyState.url },
                 job = { imageCopyState.job },
@@ -80,6 +83,7 @@ fun PortraitActivityScreen(
                 onDownloadUrl = { event(EventImageCopy.GetPostData) },
                 onClear = { event(EventImageCopy.ClearData()) }
             )
+        }
         AnimatedVisibility(
             visible = imageCopyState.blocks[ScreenBlocks.HELP] == true
         ) {
@@ -118,8 +122,8 @@ fun PortraitActivityScreen(
                     event(EventImageCopy.SelectData(previewUrl = it))
                 },
                 onShareMedia = when (imageCopyState.isShare) {
-                        true -> { url -> event(EventImageCopy.ShareMedia(url)) }
-                        false -> null
+                    true -> { url -> event(EventImageCopy.ShareMedia(url)) }
+                    false -> null
                 }
             )
         }
@@ -127,7 +131,10 @@ fun PortraitActivityScreen(
 
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    device = Devices.PHONE
+)
 @Composable
 fun PortraitActivityScreenPreview(
 ) {
@@ -138,6 +145,18 @@ fun PortraitActivityScreenPreview(
                 result = ResultMessage(R.string.result_message_start, TypeResult.DONE),
                 selectedList = emptyList<String>().toImmutableList(),
                 downloadedList = emptyList<String>().toImmutableList(),
+                listMedia = listOf(
+                    MediaItem(
+                        isVideo = false,
+                        previewUrl = "R.drawable.insta_top",
+                        mediaUrl = "tmp"
+                    ),
+                    MediaItem(
+                        isVideo = false,
+                        previewUrl = "tmp",
+                        mediaUrl = "tmp"
+                    )
+                )
             )
         ) {}
     }

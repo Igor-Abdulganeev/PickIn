@@ -234,7 +234,7 @@ fun HelpScreen() {
             )
             Icon(
                 modifier = Modifier,
-                imageVector = Icons.Outlined.EmergencyRecording,
+                imageVector = Icons.Outlined.Photo,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.errorContainer
             )
@@ -255,7 +255,7 @@ fun HelpScreen() {
             )
             Icon(
                 modifier = Modifier,
-                imageVector = Icons.Outlined.Photo,
+                imageVector = Icons.Outlined.EmergencyRecording,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )

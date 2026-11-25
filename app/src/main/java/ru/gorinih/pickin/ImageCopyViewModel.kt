@@ -121,6 +121,7 @@ class ImageCopyViewModel(
             is EventImageCopy.RotateVisibilitySettings -> rotateVisibilitySettings()
             is EventImageCopy.RotateVisibilityHelp -> rotateVisibilityHelp()
             is EventImageCopy.RotateVisibilityPreview -> rotateVisibilityPreview()
+            is EventImageCopy.RotateVisibilityInput -> rotateVisibilityInput()
             is EventImageCopy.ShareMedia -> shareData(event.url)
         }
     }
@@ -215,6 +216,10 @@ class ImageCopyViewModel(
 
     private fun rotateVisibilityHelp() {
         rotateVisibilityScreen(ScreenBlocks.HELP)
+    }
+
+    private fun rotateVisibilityInput() {
+        rotateVisibilityScreen(ScreenBlocks.INPUT)
     }
 
     private fun selectData(previewUrl: String) {

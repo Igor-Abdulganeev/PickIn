@@ -11,6 +11,7 @@ sealed interface EventImageCopy {
     data object RotateVisibilityHelp: EventImageCopy
     data object RotateVisibilityPreview: EventImageCopy
     data object RotateVisibilitySettings: EventImageCopy
+    data object RotateVisibilityInput : EventImageCopy
     data class OnChangeUrl(val newUrl: String, val startIfPossibly: Boolean = false): EventImageCopy
     data class OnChangeTypeDownload(val index: Int): EventImageCopy
     data class OnChangeMediaDownload(val index: Int): EventImageCopy
