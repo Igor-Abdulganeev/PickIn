@@ -1,5 +1,5 @@
 [versions]
-version-code = "22"
+version-code = "23"
 version-name = "0.1"
 agp = "9.4.1"
 coreKtx = "1.19.1"

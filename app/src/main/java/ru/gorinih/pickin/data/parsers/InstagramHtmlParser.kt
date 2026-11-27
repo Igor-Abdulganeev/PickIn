@@ -29,6 +29,8 @@ class InstagramHtmlParser {
         )
     )
 
+    private val urlSizeRegex = Regex("""[/_][sp](\d+)x(\d+)[/_&]""")
+
     fun parsePost(
         url: String,
         html: String
@@ -62,30 +64,6 @@ class InstagramHtmlParser {
                 continue
             }
 
-            // залогиненый формат Instagram, т.к. пока без логина то скроем
-/*
-            val postInfo = findProperty(
-                element = root,
-                propertyName = "xdt_api__v1__media__shortcode__web_info"
-            )
-
-            val items = postInfo?.let {
-                findProperty(it, "items") as? JsonArray
-            }
-
-            val loginPost = items?.firstOrNull { item ->
-                item.jsonObjectOrNull()
-                    ?.get("code")
-                    ?.jsonPrimitive
-                    ?.contentOrNull == shortcode
-            }?.jsonObjectOrNull()
-                ?: items?.singleOrNull()?.jsonObjectOrNull()
-
-            if (loginPost != null) { return CarouselSearchResult.Found(loginPost) }
-
- */
-
-            // без логина формат: ищем объект, содержащий carousel_media.
             val unLoginPost = findObjectWithCarousel(
                 element = root,
                 shortcode = shortcode
@@ -216,27 +194,55 @@ class InstagramHtmlParser {
     ): List<JsonObject> =
         (post["carousel_media"] as? JsonArray)?.filterIsInstance<JsonObject>() ?: listOf(post)
 
-    private fun extractImageUrl(
-        media: JsonObject
-    ): String? {
+    private fun extractDisplayUri(media: JsonObject): String? =
+        media["display_uri"]
+            ?.jsonPrimitive
+            ?.contentOrNull
+
+    private fun extractPreviewUrl(media: JsonObject): String? {
         val candidates = media["image_versions2"]
             ?.jsonObjectOrNull()
             ?.get("candidates") as? JsonArray
+            ?: return extractDisplayUri(media)
 
-        val candidateUrl = candidates
-            ?.firstOrNull()
-            ?.jsonObjectOrNull()
+        val parsedCandidates = candidates
+            .mapNotNull { it.jsonObjectOrNull() }
+            .map { candidate -> candidate to extractCandidateSize(candidate) }
+
+        val resizedCandidates = parsedCandidates
+            .filter { it.second != null }
+            .sortedBy { (_, size) -> size!!.first.toLong() * size.second.toLong() }
+
+        val previewCandidate = resizedCandidates.firstOrNull { (_, size) ->
+            size!!.first >= 420
+        }?.first
+            ?: resizedCandidates.lastOrNull()?.first
+            ?: parsedCandidates.firstOrNull()?.first
+
+        return previewCandidate
             ?.get("url")
             ?.jsonPrimitive
             ?.contentOrNull
+            ?: extractDisplayUri(media)
+    }
 
-        if (!candidateUrl.isNullOrBlank()) {
-            return candidateUrl
-        }
+    private fun extractImageUrl(media: JsonObject): String? {
+        val candidates = media["image_versions2"]
+            ?.jsonObjectOrNull()
+            ?.get("candidates") as? JsonArray
+            ?: return extractDisplayUri(media)
 
-        return media["display_uri"]
+        return candidates
+            .mapNotNull { it.jsonObjectOrNull() }
+            .maxByOrNull { candidate ->
+                extractCandidateSize(candidate)
+                    ?.let { (w, h) -> w.toLong() * h.toLong() }
+                    ?: Long.MAX_VALUE
+            }
+            ?.get("url")
             ?.jsonPrimitive
             ?.contentOrNull
+            ?: extractDisplayUri(media)
     }
 
     private fun extractVideoUrl(media: JsonObject): String? {
@@ -257,31 +263,6 @@ class InstagramHtmlParser {
             ?.contentOrNull
     }
 
-    private fun extractPreviewUrl(media: JsonObject): String? {
-        val candidates = media["image_versions2"]
-            ?.jsonObjectOrNull()
-            ?.get("candidates") as? JsonArray
-            ?: return extractDisplayUri(media)
-        return candidates
-            .mapNotNull { it.jsonObjectOrNull() }
-            .maxByOrNull { candidate ->
-                val width = candidate["width"]
-                    ?.jsonPrimitive?.intOrNull ?: 0
-                val height = candidate["height"]
-                    ?.jsonPrimitive?.intOrNull ?: 0
-
-                width * height
-            }
-            ?.get("url")
-            ?.jsonPrimitive
-            ?.contentOrNull
-    }
-
-    private fun extractDisplayUri(media: JsonObject): String? =
-        media["display_uri"]
-            ?.jsonPrimitive
-            ?.contentOrNull
-
     private fun isVideo(media: JsonObject): Boolean {
         val typeName = media["__typename"]
             ?.jsonPrimitive
@@ -292,6 +273,20 @@ class InstagramHtmlParser {
             ?.jsonPrimitive
             ?.intOrNull
         return mediaType == 2 || media["video_versions"] is JsonArray
+    }
+
+    private fun extractCandidateSize(candidate: JsonObject): Pair<Int, Int>? {
+        val jsonWidth = candidate["width"]?.jsonPrimitive?.intOrNull
+        val jsonHeight = candidate["height"]?.jsonPrimitive?.intOrNull
+        if (jsonWidth != null && jsonHeight != null) {
+            return jsonWidth to jsonHeight
+        }
+
+        val url = candidate["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val match = urlSizeRegex.find(url) ?: return null
+        val w = match.groupValues[1].toIntOrNull() ?: return null
+        val h = match.groupValues[2].toIntOrNull() ?: return null
+        return w to h
     }
 
     private fun parseCarouselItem(media: JsonObject, owner: Pair<String?, String?>): CarouselItem {

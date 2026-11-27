@@ -67,7 +67,9 @@ fun PreviewScreen(
                 onSavedClick = onStartDownload
             )
             Text(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
                 text = stringResource(R.string.count_selected_label,
                     "${selectedMedia.count { s -> !downloadedMedia.contains(s) }}"),
                 style = MaterialTheme.typography.labelMedium
@@ -88,7 +90,7 @@ fun PreviewScreen(
                     ItemMediaCard(
                         media = item,
                         isSelected = selectedMedia.contains(item.previewUrl),
-                        isDownload = downloadedMedia.contains(item.mediaUrl),
+                        isDownload = downloadedMedia.contains(item.previewUrl),
                         onClick = { previewUrl ->
                             if (job() == StatusJob.WAITING_JOB)
                                 onClickMedia(previewUrl)

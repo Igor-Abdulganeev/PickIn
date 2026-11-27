@@ -249,7 +249,7 @@ class ImageCopyViewModel(
     private fun getSelectedData() {
         viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
             val listOfMedia: List<String> =
-                mediaData.filter { media -> media.previewUrl in selectedData && downloadedData.firstOrNull { media.mediaUrl == it } == null }
+                mediaData.filter { media -> media.previewUrl in selectedData && downloadedData.firstOrNull { media.previewUrl == it } == null }
                     .map { it.mediaUrl }
             if (listOfMedia.isNotEmpty())
                 getMediaData(listOfMedia)
@@ -444,7 +444,9 @@ class ImageCopyViewModel(
 
                 is DownloadState.Progress -> {
                     if (result.isDone) {
-                        downloadedData.add(result.url)
+                        val previewDownloaded =
+                            mediaData.firstOrNull { it.mediaUrl == result.url }?.previewUrl
+                        if (previewDownloaded != null) downloadedData.add(previewDownloaded)
                         countNeedDownload -= 1
                         imageCopyState =
                             imageCopyState.copy(
@@ -461,27 +463,16 @@ class ImageCopyViewModel(
 
                 is DownloadState.Success -> {
                     val downloaded = result.files
-                    val downloadMediaCount = downloaded.count { it.errorMessage.isEmpty() }
-                    if (allMediaCount == downloadMediaCount) {
-                        imageCopyState =
-                            imageCopyState.copy(
-                                url = "",
-                                listMedia = emptyList(),
-                                selectedList = emptyList<String>().toImmutableList(),
+                    val downloadedUrls = downloaded.filter { it.uri != null }.map { it.file }
+                    val previewUrls =
+                        mediaData.filter { it.mediaUrl in downloadedUrls }.map { it.previewUrl }
+                    downloadedData.addAll(previewUrls)
+                    downloaded.forEach {
+                        if (it.uri != null) {
+                            sharedData[it.file] = SavedFile(
+                                uri = it.uri,
+                                type = it.type
                             )
-                        sharedData.clear()
-                        mediaData.clear()
-                        selectedData.clear()
-                        downloadedData.clear()
-                    } else {
-                        downloadedData.addAll(downloaded.filter { it.uri != null }.map { it.file })
-                        downloaded.forEach {
-                            if (it.uri != null) {
-                                sharedData[it.file] = SavedFile(
-                                    uri = it.uri,
-                                    type = it.type
-                                )
-                            }
                         }
                     }
                     imageCopyState = imageCopyState.copy(
